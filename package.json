@@ -1,0 +1,21 @@
+{
+  "name": "nutritrack-pwa",
+  "version": "1.0.0",
+  "description": "NutriTrack - 营养体重管理PWA应用",
+  "main": "index.html",
+  "scripts": {
+    "generate-icons": "node generate-icons-node.js",
+    "start": "npx serve .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["pwa", "nutrition", "health", "weight-tracker"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "canvas": "^2.11.2"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

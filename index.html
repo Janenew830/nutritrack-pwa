@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriTrack">
+<meta name="theme-color" content="#16a34a">
+<meta name="msapplication-TileColor" content="#16a34a">
+<title>NutriTrack 营养追踪</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- iOS Touch Icons -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180x180.svg">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152x152.svg">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167x167.svg">
+
+<!-- Android/Chrome Icons -->
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.svg">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --green: #4ade80;
+  --green-dark: #22c55e;
+  --green-deeper: #16a34a;
+  --green-light: #bbf7d0;
+  --green-pale: #f0fdf4;
+  --pink: #f9a8d4;
+  --pink-pale: #fdf2f8;
+  --peach: #fed7aa;
+  --peach-pale: #fff7ed;
+  --lavender: #ddd6fe;
+  --lavender-pale: #f5f3ff;
+  --sky: #bae6fd;
+  --sky-pale: #f0f9ff;
+  --gray-100: #f7f8f9;
+  --gray-200: #eef0f2;
+  --gray-400: #b0b8c4;
+  --red: #fb7185;
+  --orange: #fb923c;
+  --blue: #60a5fa;
+  --yellow: #fbbf24;
+  --bg: #fafff7;
+  --surface: #f2faf0;
+  --card: #ffffff;
+  --text: #1a2e1a;
+  --text-secondary: #6b8c6b;
+  --border: #e2f0e2;
+  --shadow: rgba(74,222,128,0.12);
+  --nav-h: 74px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --radius: 20px;
+  --radius-sm: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1a0d;
+    --surface: #152015;
+    --card: #1c2c1c;
+    --text: #edfced;
+    --text-secondary: #7ab87a;
+    --border: #263d26;
+    --shadow: rgba(74,222,128,0.06);
+    --gray-100: #182818;
+    --gray-200: #223322;
+    --gray-400: #5a8a5a;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; font-family: 'Nunito', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+body { display: flex; flex-direction: column; }
+
+/* Scrollable content area */
+#app { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.tab-content { display: none; flex: 1; overflow-y: auto; padding-top: calc(60px + var(--safe-top)); padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px); }
+.tab-content.active { display: block; }
+.tab-content::-webkit-scrollbar { display: none; }
+
+/* Top Header */
+.top-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: calc(60px + var(--safe-top));
+  padding-top: var(--safe-top);
+  background: var(--bg);
+  border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; padding-left: 18px; padding-right: 18px;
+  gap: 10px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.top-header .logo-mark {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  border-radius: 12px;
+  box-shadow: 0 3px 10px var(--shadow);
+  display: flex; align-items: center; justify-content: center;
+}
+.top-header .logo-mark svg { width: 18px; height: 18px; fill: white; }
+.top-header h1 { font-size: 19px; font-weight: 900; color: var(--text); letter-spacing: -0.3px; }
+.top-header .date-badge {
+  margin-left: auto; font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  background: var(--surface); border-radius: 20px; padding: 5px 11px;
+  border: 1.5px solid var(--border);
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  height: calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--bg);
+  border-top: 1.5px solid var(--border);
+  display: flex; align-items: flex-start; padding-top: 8px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; padding: 4px 0; transition: all 0.2s;
+  -webkit-user-select: none; user-select: none;
+}
+.nav-item .nav-icon {
+  width: 40px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: 14px; transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.nav-item svg { width: 21px; height: 21px; stroke: var(--text-secondary); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: all 0.2s; }
+.nav-item span { font-size: 10px; color: var(--text-secondary); font-weight: 700; transition: all 0.2s; }
+.nav-item.active svg { stroke: var(--green-deeper); }
+.nav-item.active span { color: var(--green-deeper); }
+.nav-item.active .nav-icon {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  box-shadow: 0 2px 8px rgba(74,222,128,0.3);
+  transform: scale(1.05);
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 0 14px 12px;
+  box-shadow: 0 2px 16px var(--shadow);
+}
+.card-title { font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+
+/* Page padding */
+.page-content { padding: 12px 0; }
+
+/* Summary Ring */
+.summary-hero {
+  margin: 0 14px 12px;
+  background: linear-gradient(135deg, #22c55e 0%, #4ade80 60%, #86efac 100%);
+  border-radius: 24px; padding: 22px 22px 22px 20px;
+  color: white; display: flex; align-items: center; gap: 20px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 8px 24px rgba(74,222,128,0.35);
+}
+.summary-hero::before {
+  content: ''; position: absolute; top: -20px; right: -20px;
+  width: 110px; height: 110px; border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+}
+.summary-hero::after {
+  content: ''; position: absolute; bottom: -30px; right: 60px;
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+}
+/* third bubble */
+.summary-hero .bubble3 {
+  position: absolute; bottom: 8px; left: 120px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  pointer-events: none;
+}
+.ring-container { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+.ring-container canvas { position: absolute; top: 0; left: 0; }
+.ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-center .cal-num { font-size: 20px; font-weight: 700; color: white; line-height: 1; }
+.ring-center .cal-label { font-size: 9px; color: rgba(255,255,255,0.75); font-weight: 500; }
+.hero-stats { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.hero-stat-row { display: flex; gap: 16px; }
+.hero-stat { flex: 1; }
+.hero-stat .val { font-size: 16px; font-weight: 700; color: white; }
+.hero-stat .lbl { font-size: 11px; color: rgba(255,255,255,0.7); }
+.hero-goal { font-size: 12px; color: rgba(255,255,255,0.8); }
+.hero-goal strong { color: white; }
+
+/* Macro bars */
+.macro-bars { display: flex; flex-direction: column; gap: 12px; }
+.macro-row { display: flex; align-items: center; gap: 10px; }
+.macro-name { font-size: 12px; font-weight: 800; width: 36px; color: var(--text-secondary); }
+.macro-bar-wrap { flex: 1; height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; }
+.macro-bar { height: 100%; border-radius: 4px; transition: width 0.7s cubic-bezier(0.34,1.56,0.64,1); }
+.macro-bar.protein { background: linear-gradient(90deg, #60a5fa, #93c5fd); }
+.macro-bar.carbs { background: linear-gradient(90deg, #fb923c, #fbbf24); }
+.macro-bar.fat { background: linear-gradient(90deg, #fbbf24, #fde68a); }
+.macro-nums { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-align: right; width: 72px; }
+
+/* Meal sections */
+.meal-section { margin: 0 14px 12px; }
+.meal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.meal-icon { width: 34px; height: 34px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.meal-title { font-weight: 800; font-size: 15px; flex: 1; }
+.meal-cals { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.meal-add-btn {
+  width: 30px; height: 30px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 19px; font-weight: 300; line-height: 1;
+  box-shadow: 0 3px 8px rgba(74,222,128,0.35);
+  transition: transform 0.15s;
+}
+.meal-add-btn:active { transform: scale(0.9); }
+.food-item { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1.5px solid var(--border); }
+.food-item:last-child { border-bottom: none; }
+.food-item-info { flex: 1; }
+.food-item-name { font-size: 14px; font-weight: 700; }
+.food-item-detail { font-size: 11px; color: var(--text-secondary); margin-top: 2px; font-weight: 600; }
+.food-item-cal { font-size: 14px; font-weight: 800; color: var(--green-dark); }
+.food-item-del { width: 26px; height: 26px; border: none; background: var(--gray-100); border-radius: 8px; cursor: pointer; color: var(--gray-400); font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.empty-meal { padding: 14px; text-align: center; color: var(--text-secondary); font-size: 13px; font-weight: 600; background: var(--surface); border-radius: 12px; }
+
+/* Weight tab */
+.weight-input-row { display: flex; gap: 10px; align-items: flex-end; }
+.input-group { flex: 1; }
+.input-label { font-size: 12px; font-weight: 800; color: var(--text-secondary); margin-bottom: 6px; display: block; letter-spacing: 0.03em; }
+.input-field {
+  width: 100%; padding: 12px 14px; font-size: 16px; font-family: inherit; font-weight: 700;
+  background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field:focus { border-color: var(--green); box-shadow: 0 0 0 4px rgba(74,222,128,0.15); }
+.btn-primary {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  color: white; border: none;
+  border-radius: var(--radius-sm); font-size: 15px; font-weight: 800; font-family: inherit;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(74,222,128,0.4);
+}
+.btn-primary:active { transform: scale(0.96); box-shadow: 0 2px 6px rgba(74,222,128,0.3); }
+.btn-secondary {
+  padding: 10px 16px; background: var(--surface); color: var(--text); border: 2px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-secondary:active { transform: scale(0.97); }
+.chart-wrap { height: 200px; position: relative; }
+.weight-log { display: flex; flex-direction: column; gap: 1px; }
+.weight-log-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1.5px solid var(--border); }
+.weight-log-item:last-child { border-bottom: none; }
+.weight-log-date { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.weight-log-val { font-size: 16px; font-weight: 800; }
+.weight-log-diff { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 800; }
+.weight-log-diff.up { background: #ffe4e6; color: #f43f5e; }
+.weight-log-diff.down { background: var(--green-pale); color: var(--green-deeper); }
+.weight-log-diff.same { background: var(--gray-100); color: var(--text-secondary); }
+
+/* AI Chat */
+.chat-messages { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px; min-height: 100px; }
+.msg { max-width: 82%; display: flex; flex-direction: column; gap: 3px; }
+.msg.user { align-self: flex-end; align-items: flex-end; }
+.msg.ai { align-self: flex-start; align-items: flex-start; }
+.msg-bubble {
+  padding: 11px 15px; border-radius: 18px; font-size: 14px; line-height: 1.55; font-weight: 600;
+}
+.msg.user .msg-bubble { background: linear-gradient(135deg, var(--green-dark), var(--green)); color: white; border-bottom-right-radius: 5px; box-shadow: 0 3px 10px rgba(74,222,128,0.3); }
+.msg.ai .msg-bubble { background: var(--card); color: var(--text); border: 1.5px solid var(--border); border-bottom-left-radius: 5px; box-shadow: 0 2px 8px var(--shadow); }
+.msg-time { font-size: 10px; font-weight: 700; color: var(--text-secondary); }
+.chat-input-wrap {
+  position: sticky; bottom: 0;
+  padding: 12px 14px calc(var(--nav-h) + var(--safe-bottom) + 10px);
+  background: var(--bg); border-top: 1.5px solid var(--border);
+  display: flex; gap: 10px;
+}
+.chat-input {
+  flex: 1; padding: 11px 16px; background: var(--surface);
+  border: 2px solid var(--border); border-radius: 22px;
+  font-size: 14px; font-family: inherit; font-weight: 600; color: var(--text); outline: none; resize: none;
+  transition: border-color 0.2s, box-shadow 0.2s; max-height: 100px;
+}
+.chat-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(74,222,128,0.15); }
+.chat-send-btn {
+  width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%;
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; color: white;
+  box-shadow: 0 3px 10px rgba(74,222,128,0.4);
+  transition: transform 0.15s;
+}
+.chat-send-btn:active { transform: scale(0.9); }
+.chat-send-btn svg { width: 18px; height: 18px; fill: white; }
+.ai-thinking { display: flex; gap: 5px; padding: 12px 16px; background: var(--card); border-radius: 18px; border: 1.5px solid var(--border); align-self: flex-start; border-bottom-left-radius: 5px; }
+.ai-thinking span { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: bounce 1.2s infinite; }
+.ai-thinking span:nth-child(2) { animation-delay: 0.2s; }
+.ai-thinking span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-7px); } }
+.quick-prompts { display: flex; gap: 8px; padding: 8px 14px 8px; overflow-x: auto; }
+.quick-prompts::-webkit-scrollbar { display: none; }
+.quick-chip {
+  flex-shrink: 0; padding: 7px 14px; background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--text);
+  cursor: pointer; white-space: nowrap; transition: all 0.15s;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.quick-chip:active { background: var(--green-pale); border-color: var(--green); color: var(--green-deeper); }
+
+/* Settings */
+.settings-section { margin: 0 14px 12px; }
+.settings-group { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 12px var(--shadow); }
+.setting-row {
+  display: flex; align-items: center; padding: 14px 16px; gap: 12px;
+  border-bottom: 1.5px solid var(--border);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-icon { width: 34px; height: 34px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.setting-info { flex: 1; }
+.setting-name { font-size: 14px; font-weight: 700; }
+.setting-desc { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-top: 2px; }
+.setting-control { margin-left: auto; }
+.setting-control input, .setting-control select {
+  padding: 6px 10px; background: var(--surface); border: 2px solid var(--border);
+  border-radius: 10px; font-size: 13px; font-family: inherit; font-weight: 700; color: var(--text);
+  outline: none; text-align: right; max-width: 120px;
+}
+.setting-control select { max-width: 140px; }
+.setting-section-title { font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 14px 8px; padding-top: 4px; }
+
+/* Modal / Overlay */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200;
+  display: none; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  width: 100%; max-height: 82vh; background: var(--bg); border-radius: 28px 28px 0 0;
+  padding: 20px 20px calc(20px + var(--safe-bottom));
+  display: flex; flex-direction: column; gap: 12px;
+  animation: slideUp 0.32s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 44px; height: 5px; background: var(--border); border-radius: 3px; margin: 0 auto -4px; }
+.modal-title { font-size: 18px; font-weight: 900; }
+.modal-search {
+  width: 100%; padding: 12px 16px; background: var(--surface);
+  border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 15px; font-family: inherit; font-weight: 600; color: var(--text); outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.modal-search:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(74,222,128,0.15); }
+.food-results { overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
+.food-result-item {
+  display: flex; align-items: center; padding: 12px 0; border-bottom: 1.5px solid var(--border);
+  cursor: pointer; gap: 12px;
+}
+.food-result-item:last-child { border-bottom: none; }
+.food-result-icon { width: 38px; height: 38px; border-radius: 12px; background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.food-result-name { flex: 1; font-size: 14px; font-weight: 700; }
+.food-result-cal { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.food-amount-row { display: flex; align-items: center; gap: 10px; }
+.food-amount-row input { flex: 1; padding: 12px 14px; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-sm); font-size: 16px; font-family: inherit; font-weight: 700; color: var(--text); outline: none; }
+.food-amount-row input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(74,222,128,0.15); }
+.food-preview { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-radius: var(--radius-sm); padding: 14px; display: flex; gap: 12px; border: 1.5px solid var(--green-light); }
+.fp-item { text-align: center; flex: 1; }
+.fp-val { font-size: 15px; font-weight: 900; color: var(--green-deeper); }
+.fp-lbl { font-size: 10px; font-weight: 700; color: var(--text-secondary); margin-top: 3px; }
+
+/* Onboarding */
+#onboarding {
+  position: fixed; inset: 0; z-index: 300; background: var(--bg);
+  display: flex; flex-direction: column; overflow-y: auto;
+  padding: calc(40px + var(--safe-top)) 22px calc(40px + var(--safe-bottom));
+}
+.onboard-logo { text-align: center; margin-bottom: 28px; }
+.onboard-logo .mark {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  border-radius: 24px; display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 14px; box-shadow: 0 8px 24px rgba(74,222,128,0.4);
+}
+.onboard-logo svg { width: 38px; height: 38px; fill: white; }
+.onboard-logo h1 { font-size: 28px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; }
+.onboard-logo p { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-top: 5px; }
+.onboard-form { display: flex; flex-direction: column; gap: 14px; }
+.onboard-row { display: flex; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.form-label { font-size: 12px; font-weight: 800; color: var(--text-secondary); letter-spacing: 0.04em; }
+.form-input {
+  padding: 12px 14px; background: var(--surface); border: 2px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 16px; font-family: inherit; font-weight: 700; color: var(--text); outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus { border-color: var(--green); box-shadow: 0 0 0 4px rgba(74,222,128,0.15); }
+.goal-cards { display: flex; gap: 10px; }
+.goal-card {
+  flex: 1; padding: 16px 10px; border: 2px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; text-align: center; transition: all 0.2s;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.goal-card.selected { border-color: var(--green); background: linear-gradient(135deg, #f0fdf4, #dcfce7); box-shadow: 0 4px 16px rgba(74,222,128,0.25); }
+.goal-card .goal-emoji { font-size: 26px; margin-bottom: 7px; }
+.goal-card .goal-name { font-size: 12px; font-weight: 800; color: var(--text); }
+.activity-options { display: flex; flex-direction: column; gap: 8px; }
+.activity-opt {
+  padding: 12px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center;
+}
+.activity-opt.selected { border-color: var(--green); background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+.activity-opt .opt-name { font-size: 14px; font-weight: 800; }
+.activity-opt .opt-desc { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.activity-opt .check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+.activity-opt.selected .check { background: linear-gradient(135deg, var(--green-dark), var(--green)); border-color: var(--green); box-shadow: 0 2px 6px rgba(74,222,128,0.4); }
+.activity-opt.selected .check::after { content: '✓'; font-size: 11px; color: white; font-weight: 900; }
+
+/* Stats row */
+.stats-row { display: flex; gap: 10px; margin: 0 14px 12px; }
+.stat-card {
+  flex: 1; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 14px 10px; text-align: center;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.stat-card .stat-val { font-size: 22px; font-weight: 900; color: var(--text); }
+.stat-card .stat-unit { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+.stat-card .stat-lbl { font-size: 10px; font-weight: 700; color: var(--text-secondary); margin-top: 3px; letter-spacing: 0.03em; }
+.bmi-badge { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 800; margin-top: 4px; }
+.bmi-badge.normal { background: var(--green-pale); color: var(--green-deeper); }
+.bmi-badge.overweight { background: var(--peach-pale); color: #c2410c; }
+.bmi-badge.underweight { background: var(--sky-pale); color: #1d4ed8; }
+.bmi-badge.obese { background: #ffe4e6; color: #f43f5e; }
+
+/* Date navigator */
+.date-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 4px;
+  gap: 8px;
+}
+.date-nav-btn {
+  width: 36px; height: 36px; border-radius: 12px; border: 2px solid var(--border);
+  background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text); font-size: 18px; flex-shrink: 0; transition: all 0.15s;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.date-nav-btn:active { background: var(--green-pale); border-color: var(--green); }
+.date-nav-btn:disabled { opacity: 0.3; pointer-events: none; }
+.date-nav-center { flex: 1; text-align: center; }
+.date-nav-label { font-size: 16px; font-weight: 900; color: var(--text); }
+.date-nav-sub { font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-top: 1px; }
+.date-nav-today-btn {
+  padding: 5px 12px; border-radius: 20px; border: 2px solid var(--green);
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: var(--green-deeper);
+  font-size: 11px; font-weight: 800; cursor: pointer; white-space: nowrap;
+  font-family: inherit;
+}
+.date-nav-today-btn.hidden { visibility: hidden; }
+.food-day-summary {
+  display: flex; gap: 8px; padding: 4px 14px 8px; overflow-x: auto;
+}
+.food-day-summary::-webkit-scrollbar { display: none; }
+.day-stat-chip {
+  flex-shrink: 0; padding: 6px 13px; border-radius: 20px;
+  background: var(--card); border: 1.5px solid var(--border);
+  font-size: 12px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 5px;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.day-stat-chip .chip-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* Body Measurements */
+.measure-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.measure-tile {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 10px; text-align: center;
+  transition: all 0.2s;
+}
+.measure-tile.has-data { background: var(--card); border-color: var(--green-light); box-shadow: 0 2px 8px var(--shadow); }
+.measure-tile .mt-emoji { font-size: 20px; margin-bottom: 5px; display: block; }
+.measure-tile .mt-name { font-size: 10px; font-weight: 800; color: var(--text-secondary); letter-spacing: 0.04em; text-transform: uppercase; }
+.measure-tile .mt-val { font-size: 18px; font-weight: 900; color: var(--green-deeper); margin-top: 3px; }
+.measure-tile .mt-unit { font-size: 10px; font-weight: 700; color: var(--text-secondary); }
+.measure-tile .mt-diff { font-size: 10px; font-weight: 800; margin-top: 3px; }
+.measure-tile .mt-diff.up { color: var(--red); }
+.measure-tile .mt-diff.down { color: var(--green-deeper); }
+.measure-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.measure-input-item { display: flex; flex-direction: column; gap: 5px; }
+.measure-input-item label { font-size: 11px; font-weight: 800; color: var(--text-secondary); }
+.measure-input-item input {
+  width: 100%; padding: 10px 12px; background: var(--surface);
+  border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 15px; font-family: inherit; font-weight: 700; color: var(--text); outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.measure-input-item input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(74,222,128,0.15); }
+.measure-log-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1.5px solid var(--border);
+}
+.measure-log-item:last-child { border-bottom: none; }
+.measure-log-date { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.measure-log-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.measure-log-chip { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: var(--green-pale); color: var(--green-deeper); }
+
+/* Utility */
+.text-green { color: var(--green-dark); }
+.text-secondary { color: var(--text-secondary); }
+.font-bold { font-weight: 700; }
+.mt-4 { margin-top: 16px; }
+.hidden { display: none !important; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.section-gap { height: 8px; }
+</style>
+</head>
+<body>
+<!-- Onboarding -->
+<div id="onboarding">
+  <div class="onboard-logo">
+    <div class="mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C9.5 2 7 4.5 7 8c0 2.5 1.5 4.7 3.5 5.7V22h3v-8.3C15.5 12.7 17 10.5 17 8c0-3.5-2.5-6-5-6z"/></svg>
+    </div>
+    <h1>NutriTrack</h1>
+    <p>你的专属营养追踪助手</p>
+  </div>
+  <div class="onboard-form">
+    <div class="onboard-row">
+      <div class="form-group">
+        <label class="form-label">姓名</label>
+        <input class="form-input" id="ob-name" placeholder="你的名字" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">年龄</label>
+        <input class="form-input" id="ob-age" placeholder="25" type="number" min="10" max="100">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">性别</label>
+      <select class="form-input" id="ob-gender">
+        <option value="male">男</option>
+        <option value="female">女</option>
+      </select>
+    </div>
+    <div class="onboard-row">
+      <div class="form-group">
+        <label class="form-label">身高 (cm)</label>
+        <input class="form-input" id="ob-height" placeholder="170" type="number" min="100" max="250">
+      </div>
+      <div class="form-group">
+        <label class="form-label">体重 (kg)</label>
+        <input class="form-input" id="ob-weight" placeholder="65" type="number" min="30" max="300" step="0.1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">目标</label>
+      <div class="goal-cards">
+        <div class="goal-card selected" data-goal="lose" onclick="selectGoal(this)">
+          <div class="goal-emoji">🔥</div>
+          <div class="goal-name">减脂</div>
+        </div>
+        <div class="goal-card" data-goal="maintain" onclick="selectGoal(this)">
+          <div class="goal-emoji">⚖️</div>
+          <div class="goal-name">维持</div>
+        </div>
+        <div class="goal-card" data-goal="gain" onclick="selectGoal(this)">
+          <div class="goal-emoji">💪</div>
+          <div class="goal-name">增肌</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">活动水平</label>
+      <div class="activity-options">
+        <div class="activity-opt" data-act="sedentary" onclick="selectActivity(this)">
+          <div><div class="opt-name">久坐</div><div class="opt-desc">几乎不运动，办公室工作</div></div>
+          <div class="check"></div>
+        </div>
+        <div class="activity-opt" data-act="light" onclick="selectActivity(this)">
+          <div><div class="opt-name">轻度活动</div><div class="opt-desc">每周运动1-3天</div></div>
+          <div class="check"></div>
+        </div>
+        <div class="activity-opt selected" data-act="moderate" onclick="selectActivity(this)">
+          <div><div class="opt-name">中度活动</div><div class="opt-desc">每周运动3-5天</div></div>
+          <div class="check"></div>
+        </div>
+        <div class="activity-opt" data-act="active" onclick="selectActivity(this)">
+          <div><div class="opt-name">高度活动</div><div class="opt-desc">每周运动6-7天</div></div>
+          <div class="check"></div>
+        </div>
+        <div class="activity-opt" data-act="very_active" onclick="selectActivity(this)">
+          <div><div class="opt-name">极度活跃</div><div class="opt-desc">高强度运动或体力工作</div></div>
+          <div class="check"></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%;padding:14px;font-size:16px;margin-top:8px;" onclick="saveProfile()">开始追踪 →</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+  <!-- Top Header -->
+  <div class="top-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C9.5 2 7 4.5 7 8c0 2.5 1.5 4.7 3.5 5.7V22h3v-8.3C15.5 12.7 17 10.5 17 8c0-3.5-2.5-6-5-6z"/></svg>
+    </div>
+    <h1>NutriTrack</h1>
+    <div class="date-badge" id="header-date"></div>
+  </div>
+
+  <!-- TAB: Home -->
+  <div class="tab-content active" id="tab-home">
+    <div class="page-content">
+      <!-- Hero Summary -->
+      <div class="summary-hero" id="hero-card">
+        <div class="bubble3"></div>
+        <div class="ring-container">
+          <canvas id="calRingCanvas" width="90" height="90"></canvas>
+          <div class="ring-center">
+            <div class="cal-num" id="hero-eaten">0</div>
+            <div class="cal-label">已摄入</div>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-goal">目标 <strong id="hero-goal-cal">--</strong> kcal</div>
+          <div class="hero-stat-row">
+            <div class="hero-stat">
+              <div class="val" id="hero-remaining">--</div>
+              <div class="lbl">剩余 kcal</div>
+            </div>
+            <div class="hero-stat">
+              <div class="val" id="hero-burned">0</div>
+              <div class="lbl">消耗 kcal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Macro bars -->
+      <div class="card">
+        <div class="card-title">今日营养素</div>
+        <div class="macro-bars">
+          <div class="macro-row">
+            <div class="macro-name">蛋白质</div>
+            <div class="macro-bar-wrap"><div class="macro-bar protein" id="bar-protein" style="width:0%"></div></div>
+            <div class="macro-nums" id="num-protein">0 / --g</div>
+          </div>
+          <div class="macro-row">
+            <div class="macro-name">碳水</div>
+            <div class="macro-bar-wrap"><div class="macro-bar carbs" id="bar-carbs" style="width:0%"></div></div>
+            <div class="macro-nums" id="num-carbs">0 / --g</div>
+          </div>
+          <div class="macro-row">
+            <div class="macro-name">脂肪</div>
+            <div class="macro-bar-wrap"><div class="macro-bar fat" id="bar-fat" style="width:0%"></div></div>
+            <div class="macro-nums" id="num-fat">0 / --g</div>
+          </div>
+        </div>
+      </div>
+      <!-- Today's weight -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-weight">--</div>
+          <div class="stat-unit">kg</div>
+          <div class="stat-lbl">今日体重</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-bmi">--</div>
+          <div class="stat-unit">BMI</div>
+          <div id="stat-bmi-badge"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-streak">0</div>
+          <div class="stat-unit">天</div>
+          <div class="stat-lbl">连续记录</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Food Log -->
+  <div class="tab-content" id="tab-food">
+    <div class="date-nav">
+      <button class="date-nav-btn" id="food-prev-btn" onclick="changeFoodDate(-1)">‹</button>
+      <div class="date-nav-center">
+        <div class="date-nav-label" id="food-date-label">--</div>
+        <div class="date-nav-sub" id="food-date-sub">--</div>
+      </div>
+      <button class="date-nav-today-btn hidden" id="food-today-btn" onclick="goFoodToday()">回到今天</button>
+      <button class="date-nav-btn" id="food-next-btn" onclick="changeFoodDate(1)">›</button>
+    </div>
+    <div class="food-day-summary" id="food-day-summary"></div>
+    <div class="page-content" id="food-log-content"></div>
+  </div>
+
+  <!-- TAB: Weight -->
+  <div class="tab-content" id="tab-weight">
+    <div class="page-content">
+      <div class="card">
+        <div class="card-title">记录体重</div>
+        <div class="weight-input-row">
+          <div class="input-group">
+            <label class="input-label">今日体重 (kg)</label>
+            <input class="input-field" id="weight-input" type="number" placeholder="65.5" step="0.1" min="30" max="300">
+          </div>
+          <button class="btn-primary" onclick="logWeight()">记录</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">体重趋势</div>
+        <div class="chart-wrap">
+          <canvas id="weightChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">历史记录</div>
+        <div class="weight-log" id="weight-log-list"></div>
+      </div>
+
+      <!-- Body Measurements -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="card-title" style="margin-bottom:0">身体围度</div>
+          <button class="btn-primary" style="padding:7px 14px;font-size:12px" onclick="toggleMeasureForm()">+ 记录围度</button>
+        </div>
+        <!-- Latest tiles -->
+        <div class="measure-grid" id="measure-tiles"></div>
+      </div>
+
+      <!-- Measure input form (hidden by default) -->
+      <div class="card hidden" id="measure-form-card">
+        <div class="card-title">记录今日围度 (cm)</div>
+        <div class="measure-input-grid">
+          <div class="measure-input-item"><label>胸围 👙</label><input type="number" id="m-chest" placeholder="--" step="0.1" min="50" max="200"></div>
+          <div class="measure-input-item"><label>腰围 🤰</label><input type="number" id="m-waist" placeholder="--" step="0.1" min="40" max="200"></div>
+          <div class="measure-input-item"><label>臀围 🍑</label><input type="number" id="m-hip" placeholder="--" step="0.1" min="50" max="200"></div>
+          <div class="measure-input-item"><label>大腿围 🦵</label><input type="number" id="m-thigh" placeholder="--" step="0.1" min="20" max="120"></div>
+          <div class="measure-input-item"><label>手臂围 💪</label><input type="number" id="m-arm" placeholder="--" step="0.1" min="15" max="80"></div>
+          <div class="measure-input-item"><label>小腿围 🦶</label><input type="number" id="m-calf" placeholder="--" step="0.1" min="20" max="80"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn-secondary" style="flex:1" onclick="toggleMeasureForm()">取消</button>
+          <button class="btn-primary" style="flex:2" onclick="saveMeasurements()">保存围度记录</button>
+        </div>
+      </div>
+
+      <!-- Measure history -->
+      <div class="card" id="measure-history-card">
+        <div class="card-title">围度记录历史</div>
+        <div id="measure-log-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: AI Chat -->
+  <div class="tab-content" id="tab-ai">
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 14px 2px">
+      <div id="ai-provider-badge" style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;background:var(--surface);border:1.5px solid var(--border);color:var(--text-secondary)"></div>
+    </div>
+    <div class="quick-prompts" id="quick-prompts">
+      <div class="quick-chip" onclick="sendQuickPrompt(this)">一碗米饭多少卡</div>
+      <div class="quick-chip" onclick="sendQuickPrompt(this)">推荐减脂餐单</div>
+      <div class="quick-chip" onclick="sendQuickPrompt(this)">我的热量目标合理吗</div>
+      <div class="quick-chip" onclick="sendQuickPrompt(this)">高蛋白食物推荐</div>
+      <div class="quick-chip" onclick="sendQuickPrompt(this)">今天吃了什么分析</div>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-wrap">
+      <textarea class="chat-input" id="chat-input" placeholder="问问AI关于营养的建议..." rows="1"></textarea>
+      <button class="chat-send-btn" onclick="sendChat()">
+        <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB: Settings -->
+  <div class="tab-content" id="tab-settings">
+    <div class="page-content">
+      <div class="settings-section">
+        <div class="setting-section-title">个人资料</div>
+        <div class="settings-group" id="profile-settings"></div>
+      </div>
+      <div class="settings-section">
+        <div class="setting-section-title">营养目标</div>
+        <div class="settings-group" id="goal-settings"></div>
+      </div>
+      <div class="settings-section">
+        <div class="setting-section-title">AI 设置</div>
+        <div class="settings-group">
+          <div class="setting-row">
+            <div class="setting-icon" style="background:#f0f9ff">🔌</div>
+            <div class="setting-info">
+              <div class="setting-name">AI 提供商</div>
+              <div class="setting-desc">选择使用哪个AI服务</div>
+            </div>
+            <div class="setting-control">
+              <select id="ai-provider-select" onchange="saveAiProvider()" style="max-width:140px">
+                <option value="gateway">AI Gateway</option>
+                <option value="deepseek">DeepSeek</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row" id="row-gateway-key">
+            <div class="setting-icon" style="background:#eff6ff">🤖</div>
+            <div class="setting-info">
+              <div class="setting-name">AI Gateway Key</div>
+              <div class="setting-desc">claude-haiku-4.5 模型</div>
+            </div>
+            <div class="setting-control">
+              <input type="password" id="api-key-input" placeholder="sk-..." style="max-width:130px" oninput="saveApiKey()">
+            </div>
+          </div>
+          <div class="setting-row hidden" id="row-deepseek-key">
+            <div class="setting-icon" style="background:#fdf4ff">🐋</div>
+            <div class="setting-info">
+              <div class="setting-name">DeepSeek API Key</div>
+              <div class="setting-desc">deepseek-chat 模型</div>
+            </div>
+            <div class="setting-control">
+              <input type="password" id="deepseek-key-input" placeholder="sk-..." style="max-width:130px" oninput="saveDeepseekKey()">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="setting-section-title">数据</div>
+        <div class="settings-group">
+          <div class="setting-row" onclick="clearAllData()" style="cursor:pointer">
+            <div class="setting-icon" style="background:#fef2f2">🗑️</div>
+            <div class="setting-info">
+              <div class="setting-name" style="color:var(--red)">清除所有数据</div>
+              <div class="setting-desc">删除所有记录和设置</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:12px;">
+        NutriTrack v1.0 · 数据本地存储，安全私密
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('home', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      </div>
+      <span>首页</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('food', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>
+      </div>
+      <span>饮食</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('weight', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      </div>
+      <span>体重</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('ai', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </div>
+      <span>AI助手</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('settings', this)">
+      <div class="nav-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </div>
+      <span>设置</span>
+    </div>
+  </nav>
+</div>
+
+<!-- Add Food Modal -->
+<div class="modal-overlay" id="food-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="modal-title" id="modal-meal-title">添加食物</div>
+      <button onclick="closeModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-secondary);line-height:1">×</button>
+    </div>
+    <input class="modal-search" id="food-search" placeholder="搜索食物..." oninput="searchFoods()" autocomplete="off">
+    <div style="text-align:center;margin:10px 0">
+      <button id="add-custom-food-btn" class="btn-secondary" style="font-size:14px;padding:8px 16px" onclick="showCustomFoodForm()">➕ 添加自定义食物</button>
+    </div>
+    <div class="food-results" id="food-results" style="max-height:220px"></div>
+    <div id="custom-food-form" class="hidden">
+      <div style="margin:15px 0;padding:15px;background:var(--surface);border-radius:var(--radius-sm);border:1px solid var(--border)">
+        <div style="font-weight:600;margin-bottom:12px;color:var(--text)">添加自定义食物</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">食物名称</div>
+            <input type="text" id="custom-food-name" placeholder="例如：红烧肉" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)">
+          </div>
+          <div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">表情符号</div>
+            <input type="text" id="custom-food-emoji" placeholder="🍚" value="🍚" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);text-align:center">
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">类别</div>
+          <input type="text" id="custom-food-category" placeholder="例如：主食、肉类、蔬菜" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)">
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px">
+          <div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">卡路里</div>
+            <input type="number" id="custom-food-cal" placeholder="kcal" min="0" step="1" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)">
+          </div>
+          <div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">蛋白质(g)</div>
+            <input type="number" id="custom-food-protein" placeholder="0" min="0" step="0.1" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)">
+          </div>
+          <div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">碳水(g)</div>
+            <input type="number" id="custom-food-carbs" placeholder="0" min="0" step="0.1" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)">
+          </div>
+          <div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">脂肪(g)</div>
+            <input type="number" id="custom-food-fat" placeholder="0" min="0" step="0.1" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text)">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn-secondary" style="flex:1" onclick="hideCustomFoodForm()">取消</button>
+          <button class="btn-primary" style="flex:1" onclick="saveCustomFood()">保存食物</button>
+        </div>
+      </div>
+    </div>
+    <div id="food-amount-section" class="hidden">
+      <div id="food-selected-name" style="font-weight:600;font-size:15px;margin-bottom:8px"></div>
+      <div class="food-amount-row">
+        <input type="number" id="food-amount" placeholder="100" min="1" max="2000" value="100" oninput="updateFoodPreview()">
+        <span style="color:var(--text-secondary);font-size:14px">克</span>
+      </div>
+      <div class="food-preview" id="food-preview" style="margin-top:10px"></div>
+      <button class="btn-primary" style="width:100%;margin-top:10px" onclick="confirmAddFood()">添加到饮食日记</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const FOOD_DB = [
+  // Chinese foods
+  {id:'rice', name:'白米饭', emoji:'🍚', cal:130, protein:2.6, carbs:28.1, fat:0.3, category:'主食'},
+  {id:'noodle', name:'面条(熟)', emoji:'🍜', cal:137, protein:4.3, carbs:27.4, fat:1.5, category:'主食'},
+  {id:'mantou', name:'馒头', emoji:'🥐', cal:233, protein:7.0, carbs:47.0, fat:1.1, category:'主食'},
+  {id:'tofu', name:'豆腐', emoji:'🧊', cal:76, protein:8.1, carbs:1.9, fat:4.1, category:'豆制品'},
+  {id:'egg', name:'鸡蛋', emoji:'🥚', cal:144, protein:13.3, carbs:2.8, fat:8.8, category:'蛋类'},
+  {id:'pork', name:'猪肉(肥瘦)', emoji:'🥩', cal:395, protein:13.2, carbs:2.4, fat:37.0, category:'肉类'},
+  {id:'chicken_breast_cn', name:'鸡胸肉', emoji:'🍗', cal:133, protein:19.4, carbs:2.5, fat:5.0, category:'肉类'},
+  {id:'beef', name:'牛肉', emoji:'🥩', cal:250, protein:20.2, carbs:2.0, fat:17.4, category:'肉类'},
+  {id:'salmon_cn', name:'三文鱼', emoji:'🐟', cal:208, protein:17.2, carbs:0.0, fat:15.4, category:'海鲜'},
+  {id:'broccoli_cn', name:'西兰花', emoji:'🥦', cal:33, protein:3.7, carbs:4.3, fat:0.4, category:'蔬菜'},
+  {id:'spinach', name:'菠菜', emoji:'🥬', cal:24, protein:2.9, carbs:3.0, fat:0.3, category:'蔬菜'},
+  {id:'apple', name:'苹果', emoji:'🍎', cal:52, protein:0.3, carbs:13.8, fat:0.2, category:'水果'},
+  {id:'banana', name:'香蕉', emoji:'🍌', cal:89, protein:1.1, carbs:22.8, fat:0.3, category:'水果'},
+  {id:'sweet_potato', name:'红薯', emoji:'🍠', cal:86, protein:1.6, carbs:20.1, fat:0.1, category:'主食'},
+  {id:'milk', name:'全脂牛奶', emoji:'🥛', cal:61, protein:3.1, carbs:4.8, fat:3.6, category:'奶制品'},
+  {id:'corn', name:'玉米', emoji:'🌽', cal:112, protein:4.0, carbs:22.8, fat:1.2, category:'主食'},
+  {id:'peanut', name:'花生', emoji:'🥜', cal:567, protein:25.8, carbs:16.1, fat:49.2, category:'坚果'},
+  {id:'pork_belly', name:'五花肉', emoji:'🥩', cal:518, protein:7.7, carbs:0.0, fat:53.0, category:'肉类'},
+  {id:'shrimp', name:'虾仁', emoji:'🦐', cal:93, protein:18.6, carbs:2.8, fat:0.8, category:'海鲜'},
+  {id:'duck_egg', name:'鸭蛋', emoji:'🥚', cal:180, protein:12.6, carbs:3.1, fat:13.0, category:'蛋类'},
+  // Western foods
+  {id:'brown_rice', name:'糙米饭', emoji:'🍚', cal:111, protein:2.6, carbs:23.0, fat:0.9, category:'主食'},
+  {id:'oats', name:'燕麦片', emoji:'🌾', cal:389, protein:16.9, carbs:66.3, fat:6.9, category:'主食'},
+  {id:'chicken_breast', name:'Chicken Breast', emoji:'🍗', cal:165, protein:31.0, carbs:0.0, fat:3.6, category:'Protein'},
+  {id:'egg_white', name:'Egg White', emoji:'🥚', cal:52, protein:10.9, carbs:0.7, fat:0.2, category:'Protein'},
+  {id:'greek_yogurt', name:'Greek Yogurt', emoji:'🥛', cal:59, protein:10.0, carbs:3.6, fat:0.4, category:'Dairy'},
+  {id:'almonds', name:'Almonds', emoji:'🌰', cal:579, protein:21.2, carbs:21.6, fat:49.9, category:'Nuts'},
+  {id:'salmon', name:'Salmon', emoji:'🐟', cal:208, protein:20.4, carbs:0.0, fat:13.4, category:'Seafood'},
+  {id:'tuna', name:'Tuna', emoji:'🐟', cal:116, protein:25.5, carbs:0.0, fat:0.8, category:'Seafood'},
+  {id:'avocado', name:'Avocado', emoji:'🥑', cal:160, protein:2.0, carbs:8.5, fat:14.7, category:'Fruit'},
+  {id:'sweet_potato2', name:'Sweet Potato', emoji:'🍠', cal:86, protein:1.6, carbs:20.1, fat:0.1, category:'Vegetable'},
+  {id:'broccoli', name:'Broccoli', emoji:'🥦', cal:34, protein:2.8, carbs:6.6, fat:0.4, category:'Vegetable'},
+  {id:'quinoa', name:'Quinoa', emoji:'🌾', cal:120, protein:4.4, carbs:21.3, fat:1.9, category:'Grain'},
+  {id:'cottage_cheese', name:'Cottage Cheese', emoji:'🧀', cal:98, protein:11.1, carbs:3.4, fat:4.3, category:'Dairy'},
+  {id:'protein_shake', name:'蛋白粉(乳清)', emoji:'💪', cal:370, protein:80.0, carbs:6.0, fat:5.0, category:'补剂'},
+];
+
+const MEAL_TYPES = [
+  {id:'breakfast', name:'早餐', emoji:'🌅', color:'#f59e0b'},
+  {id:'lunch', name:'午餐', emoji:'☀️', color:'#3b82f6'},
+  {id:'dinner', name:'晚餐', emoji:'🌙', color:'#8b5cf6'},
+  {id:'snack', name:'零食', emoji:'🍎', color:'#ef4444'},
+];
+
+const ACTIVITY_MULTIPLIERS = {
+  sedentary: 1.2,
+  light: 1.375,
+  moderate: 1.55,
+  active: 1.725,
+  very_active: 1.9,
+};
+
+// ==================== STATE ====================
+let state = {
+  profile: null,
+  weightLog: [],
+  foodLog: [],
+  customFoods: [],
+  settings: {apiKey: '', deepseekKey: '', aiProvider: 'gateway', units: 'metric'},
+  chatHistory: [],
+  currentTab: 'home',
+  currentFoodDate: null, // null = today
+};
+
+let selectedFoodItem = null;
+let currentMealType = null;
+let weightChart = null;
+let calRing = null;
+
+// ==================== DATA PERSISTENCE ====================
+function loadData() {
+  try {
+    const p = localStorage.getItem('nt_profile');
+    const w = localStorage.getItem('nt_weight');
+    const f = localStorage.getItem('nt_food');
+    const s = localStorage.getItem('nt_settings');
+    const c = localStorage.getItem('nt_chat');
+    const cf = localStorage.getItem('nt_custom_foods');
+    if (p) state.profile = JSON.parse(p);
+    if (w) state.weightLog = JSON.parse(w);
+    if (f) state.foodLog = JSON.parse(f);
+    if (s) state.settings = {...state.settings, ...JSON.parse(s)};
+    if (c) state.chatHistory = JSON.parse(c);
+    if (cf) state.customFoods = JSON.parse(cf);
+  } catch(e) { console.error('Load error:', e); }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('nt_profile', JSON.stringify(state.profile));
+    localStorage.setItem('nt_weight', JSON.stringify(state.weightLog));
+    localStorage.setItem('nt_food', JSON.stringify(state.foodLog));
+    localStorage.setItem('nt_settings', JSON.stringify(state.settings));
+    localStorage.setItem('nt_chat', JSON.stringify(state.chatHistory.slice(-50)));
+    localStorage.setItem('nt_custom_foods', JSON.stringify(state.customFoods));
+  } catch(e) { console.error('Save error:', e); }
+}
+
+// ==================== CALCULATIONS ====================
+function calcBMR(profile) {
+  const {age, gender, height, weight} = profile;
+  // Mifflin-St Jeor
+  const base = 10 * weight + 6.25 * height - 5 * age;
+  return gender === 'male' ? base + 5 : base - 161;
+}
+
+function calcTDEE(profile) {
+  const bmr = calcBMR(profile);
+  return Math.round(bmr * (ACTIVITY_MULTIPLIERS[profile.activityLevel] || 1.55));
+}
+
+function calcGoalCalories(profile) {
+  const tdee = calcTDEE(profile);
+  if (profile.goal === 'lose') return Math.round(tdee - 500);
+  if (profile.goal === 'gain') return Math.round(tdee + 300);
+  return tdee;
+}
+
+function calcMacros(goalCal, goal) {
+  let pct = {protein: 0.30, carbs: 0.40, fat: 0.30};
+  if (goal === 'lose') pct = {protein: 0.35, carbs: 0.35, fat: 0.30};
+  if (goal === 'gain') pct = {protein: 0.30, carbs: 0.45, fat: 0.25};
+  return {
+    protein: Math.round(goalCal * pct.protein / 4),
+    carbs: Math.round(goalCal * pct.carbs / 4),
+    fat: Math.round(goalCal * pct.fat / 9),
+  };
+}
+
+function calcBMI(weight, height) {
+  return (weight / ((height/100) ** 2)).toFixed(1);
+}
+
+function getBMILabel(bmi) {
+  const b = parseFloat(bmi);
+  if (b < 18.5) return {label: '偏瘦', cls: 'underweight'};
+  if (b < 25) return {label: '正常', cls: 'normal'};
+  if (b < 30) return {label: '超重', cls: 'overweight'};
+  return {label: '肥胖', cls: 'obese'};
+}
+
+function getTodayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function getTodayFoods() {
+  return state.foodLog.filter(f => f.date === getTodayStr());
+}
+
+function getFoodDateStr() {
+  return state.currentFoodDate || getTodayStr();
+}
+
+function getFoodsForDate(dateStr) {
+  return state.foodLog.filter(f => f.date === dateStr);
+}
+
+function getTodayTotals() {
+  const foods = getTodayFoods();
+  return foods.reduce((acc, f) => ({
+    cal: acc.cal + (f.calories || 0),
+    protein: acc.protein + (f.protein || 0),
+    carbs: acc.carbs + (f.carbs || 0),
+    fat: acc.fat + (f.fat || 0),
+  }), {cal:0, protein:0, carbs:0, fat:0});
+}
+
+function getLatestWeight() {
+  if (!state.weightLog.length) return null;
+  return [...state.weightLog].sort((a,b)=>b.date.localeCompare(a.date))[0];
+}
+
+function calcStreak() {
+  const today = getTodayStr();
+  const logDates = new Set([...state.weightLog.map(w=>w.date), ...state.foodLog.map(f=>f.date)]);
+  let streak = 0, d = new Date();
+  while(true) {
+    const ds = d.toISOString().split('T')[0];
+    if (!logDates.has(ds)) { if (ds === today) { d.setDate(d.getDate()-1); continue; } break; }
+    streak++;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+// ==================== ONBOARDING ====================
+let selectedGoal = 'lose';
+let selectedActivity = 'moderate';
+
+function selectGoal(el) {
+  document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedGoal = el.dataset.goal;
+}
+
+function selectActivity(el) {
+  document.querySelectorAll('.activity-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedActivity = el.dataset.act;
+}
+
+function saveProfile() {
+  const name = document.getElementById('ob-name').value.trim() || '朋友';
+  const age = parseInt(document.getElementById('ob-age').value) || 25;
+  const gender = document.getElementById('ob-gender').value;
+  const height = parseFloat(document.getElementById('ob-height').value) || 170;
+  const weight = parseFloat(document.getElementById('ob-weight').value) || 65;
+  if (!height || !weight) { alert('请填写身高和体重'); return; }
+  state.profile = {name, age, gender, height, weight, activityLevel: selectedActivity, goal: selectedGoal};
+  saveData();
+  document.getElementById('onboarding').classList.add('hidden');
+  initApp();
+}
+
+// ==================== UI RENDERING ====================
+function switchTab(tab, navEl) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  state.currentTab = tab;
+  if (tab === 'home') renderHome();
+  if (tab === 'food') renderFoodLog();
+  if (tab === 'weight') renderWeight();
+  if (tab === 'settings') renderSettings();
+  if (tab === 'ai') { renderAiBadge(); scrollChatToBottom(); }
+}
+
+function renderHeader() {
+  const d = new Date();
+  const days = ['日','一','二','三','四','五','六'];
+  document.getElementById('header-date').textContent = `${d.getMonth()+1}月${d.getDate()}日 周${days[d.getDay()]}`;
+}
+
+function renderHome() {
+  if (!state.profile) return;
+  const totals = getTodayTotals();
+  const goalCal = calcGoalCalories(state.profile);
+  const macros = calcMacros(goalCal, state.profile.goal);
+  const latest = getLatestWeight();
+  const streak = calcStreak();
+
+  // Hero
+  document.getElementById('hero-eaten').textContent = Math.round(totals.cal);
+  document.getElementById('hero-goal-cal').textContent = goalCal;
+  const remaining = goalCal - Math.round(totals.cal);
+  document.getElementById('hero-remaining').textContent = Math.max(0, remaining);
+  document.getElementById('hero-burned').textContent = '0';
+
+  // Ring
+  drawCalRing(totals.cal, goalCal);
+
+  // Macro bars
+  const pct = v => Math.min(100, Math.round(v / (macros[Object.keys(macros)[0]] ? 1 : 1) * 100));
+  const proteinPct = macros.protein ? Math.min(100, Math.round(totals.protein / macros.protein * 100)) : 0;
+  const carbsPct = macros.carbs ? Math.min(100, Math.round(totals.carbs / macros.carbs * 100)) : 0;
+  const fatPct = macros.fat ? Math.min(100, Math.round(totals.fat / macros.fat * 100)) : 0;
+  document.getElementById('bar-protein').style.width = proteinPct + '%';
+  document.getElementById('bar-carbs').style.width = carbsPct + '%';
+  document.getElementById('bar-fat').style.width = fatPct + '%';
+  document.getElementById('num-protein').textContent = `${Math.round(totals.protein)} / ${macros.protein}g`;
+  document.getElementById('num-carbs').textContent = `${Math.round(totals.carbs)} / ${macros.carbs}g`;
+  document.getElementById('num-fat').textContent = `${Math.round(totals.fat)} / ${macros.fat}g`;
+
+  // Stats
+  if (latest) {
+    const bmi = calcBMI(latest.weight, state.profile.height);
+    const bmiInfo = getBMILabel(bmi);
+    document.getElementById('stat-weight').textContent = latest.weight;
+    document.getElementById('stat-bmi').textContent = bmi;
+    document.getElementById('stat-bmi-badge').innerHTML = `<span class="bmi-badge ${bmiInfo.cls}">${bmiInfo.label}</span>`;
+  }
+  document.getElementById('stat-streak').textContent = streak;
+}
+
+function drawCalRing(eaten, goal) {
+  const canvas = document.getElementById('calRingCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = 90, cx = size/2, cy = size/2, r = 38, lw = 7;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = size * dpr; canvas.height = size * dpr;
+  canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, size, size);
+  // bg
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = lw; ctx.stroke();
+  // fill
+  const pct = Math.min(1, eaten / (goal || 1));
+  ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI/2, -Math.PI/2 + pct * Math.PI*2);
+  ctx.strokeStyle = pct >= 1 ? '#fbbf24' : 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
+}
+
+function renderFoodLog() {
+  const dateStr = getFoodDateStr();
+  const today = getTodayStr();
+  const isToday = dateStr === today;
+  const foods = getFoodsForDate(dateStr);
+
+  // Update date navigator
+  const d = new Date(dateStr + 'T12:00:00');
+  const weekDays = ['周日','周一','周二','周三','周四','周五','周六'];
+  const label = isToday ? '今天' : `${d.getMonth()+1}月${d.getDate()}日`;
+  const sub = isToday ? `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日` : weekDays[d.getDay()];
+  document.getElementById('food-date-label').textContent = label;
+  document.getElementById('food-date-sub').textContent = sub;
+
+  // Hide/show "回到今天" button
+  const todayBtn = document.getElementById('food-today-btn');
+  todayBtn.classList.toggle('hidden', isToday);
+
+  // Disable next btn if today
+  document.getElementById('food-next-btn').disabled = isToday;
+
+  // Day summary chips
+  const totals = foods.reduce((a, f) => ({
+    cal: a.cal+(f.calories||0), protein: a.protein+(f.protein||0),
+    carbs: a.carbs+(f.carbs||0), fat: a.fat+(f.fat||0)
+  }), {cal:0,protein:0,carbs:0,fat:0});
+  const goalCal = state.profile ? calcGoalCalories(state.profile) : 2000;
+  document.getElementById('food-day-summary').innerHTML = foods.length ? `
+    <div class="day-stat-chip"><span class="chip-dot" style="background:#22c55e"></span>${Math.round(totals.cal)} kcal</div>
+    <div class="day-stat-chip"><span class="chip-dot" style="background:#3b82f6"></span>蛋白 ${Math.round(totals.protein)}g</div>
+    <div class="day-stat-chip"><span class="chip-dot" style="background:#f97316"></span>碳水 ${Math.round(totals.carbs)}g</div>
+    <div class="day-stat-chip"><span class="chip-dot" style="background:#eab308"></span>脂肪 ${Math.round(totals.fat)}g</div>
+  ` : '';
+
+  // Food list
+  const container = document.getElementById('food-log-content');
+  let html = '';
+  MEAL_TYPES.forEach(meal => {
+    const mealFoods = foods.filter(f => f.meal === meal.id);
+    const mealCal = mealFoods.reduce((s, f) => s + (f.calories||0), 0);
+    const addBtn = isToday ? `<button class="meal-add-btn" onclick="openAddFood('${meal.id}')">+</button>` : '';
+    html += `<div class="meal-section">
+      <div class="meal-header">
+        <div class="meal-icon" style="background:${meal.color}22">${meal.emoji}</div>
+        <div class="meal-title">${meal.name}</div>
+        <div class="meal-cals">${mealFoods.length ? Math.round(mealCal)+' kcal' : ''}</div>
+        ${addBtn}
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:0 14px">`;
+    if (mealFoods.length === 0) {
+      html += `<div class="empty-meal" style="background:none;border:none;padding:12px 0">${isToday ? '点击 + 添加食物' : '暂无记录'}</div>`;
+    } else {
+      mealFoods.forEach(f => {
+        const delBtn = isToday ? `<button class="food-item-del" onclick="deleteFoodLog('${f.id}')">×</button>` : '';
+        html += `<div class="food-item">
+          <div class="food-item-info">
+            <div class="food-item-name">${f.foodName}</div>
+            <div class="food-item-detail">${f.amount}g · 蛋白${f.protein.toFixed(1)}g · 碳水${f.carbs.toFixed(1)}g · 脂肪${f.fat.toFixed(1)}g</div>
+          </div>
+          <div class="food-item-cal">${Math.round(f.calories)}</div>
+          ${delBtn}
+        </div>`;
+      });
+    }
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function changeFoodDate(delta) {
+  const cur = new Date((getFoodDateStr()) + 'T12:00:00');
+  cur.setDate(cur.getDate() + delta);
+  const next = cur.toISOString().split('T')[0];
+  const today = getTodayStr();
+  if (next > today) return;
+  state.currentFoodDate = next === today ? null : next;
+  renderFoodLog();
+}
+
+function goFoodToday() {
+  state.currentFoodDate = null;
+  renderFoodLog();
+}
+
+function renderWeight() {
+  const list = document.getElementById('weight-log-list');
+  const sorted = [...state.weightLog].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
+  if (!sorted.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:14px">还没有记录，快去记录今天的体重吧</div>';
+  } else {
+    list.innerHTML = sorted.map((w, i) => {
+      const prev = sorted[i+1];
+      let diffHTML = '';
+      if (prev) {
+        const diff = w.weight - prev.weight;
+        const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same';
+        const sign = diff > 0 ? '+' : '';
+        diffHTML = `<span class="weight-log-diff ${cls}">${sign}${diff.toFixed(1)}</span>`;
+      }
+      return `<div class="weight-log-item">
+        <div class="weight-log-date">${w.date}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${diffHTML}
+          <div class="weight-log-val">${w.weight} kg</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  renderWeightChart();
+}
+
+function renderWeightChart() {
+  const ctx = document.getElementById('weightChart').getContext('2d');
+  const sorted = [...state.weightLog].sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+  if (weightChart) weightChart.destroy();
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#86efac' : '#6b7280';
+  weightChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sorted.map(w => w.date.slice(5)),
+      datasets: [{
+        data: sorted.map(w => w.weight),
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34,197,94,0.1)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#22c55e',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display: false}, tooltip: {
+        callbacks: {label: ctx => ctx.parsed.y + ' kg'}
+      }},
+      scales: {
+        x: {grid: {color: gridColor}, ticks: {color: textColor, maxTicksLimit: 6}},
+        y: {grid: {color: gridColor}, ticks: {color: textColor, callback: v => v + 'kg'}},
+      }
+    }
+  });
+}
+
+function renderSettings() {
+  if (!state.profile) return;
+  const p = state.profile;
+  const goalCal = calcGoalCalories(p);
+  const macros = calcMacros(goalCal, p.goal);
+  const goalNames = {lose:'减脂', maintain:'维持体重', gain:'增肌'};
+  const actNames = {sedentary:'久坐', light:'轻度活动', moderate:'中度活动', active:'高度活动', very_active:'极度活跃'};
+
+  document.getElementById('profile-settings').innerHTML = `
+    <div class="setting-row"><div class="setting-icon" style="background:#f0fdf4">👤</div><div class="setting-info"><div class="setting-name">${p.name}</div><div class="setting-desc">${p.age}岁 · ${p.gender==='male'?'男':'女'} · ${p.height}cm</div></div></div>
+    <div class="setting-row"><div class="setting-icon" style="background:#eff6ff">⚖️</div><div class="setting-info"><div class="setting-name">当前体重</div><div class="setting-desc">${getLatestWeight()?.weight || p.weight} kg</div></div></div>
+    <div class="setting-row"><div class="setting-icon" style="background:#fff7ed">🏃</div><div class="setting-info"><div class="setting-name">活动水平</div><div class="setting-desc">${actNames[p.activityLevel]}</div></div></div>
+    <div class="setting-row" onclick="document.getElementById('onboarding').classList.remove('hidden')" style="cursor:pointer"><div class="setting-icon" style="background:#f5f3ff">✏️</div><div class="setting-info"><div class="setting-name">编辑资料</div><div class="setting-desc">修改个人信息</div></div></div>
+  `;
+
+  document.getElementById('goal-settings').innerHTML = `
+    <div class="setting-row"><div class="setting-icon" style="background:#f0fdf4">🎯</div><div class="setting-info"><div class="setting-name">目标</div><div class="setting-desc">${goalNames[p.goal]}</div></div></div>
+    <div class="setting-row"><div class="setting-icon" style="background:#fef9c3">🔥</div><div class="setting-info"><div class="setting-name">每日目标热量</div><div class="setting-desc">BMR ${Math.round(calcBMR(p))} · TDEE ${calcTDEE(p)}</div></div><div class="setting-control" style="font-weight:700;font-size:16px;color:var(--green)">${goalCal}</div></div>
+    <div class="setting-row"><div class="setting-icon" style="background:#eff6ff">🥩</div><div class="setting-info"><div class="setting-name">蛋白质目标</div></div><div class="setting-control" style="color:var(--blue);font-weight:600">${macros.protein}g</div></div>
+    <div class="setting-row"><div class="setting-icon" style="background:#fff7ed">🍚</div><div class="setting-info"><div class="setting-name">碳水目标</div></div><div class="setting-control" style="color:var(--orange);font-weight:600">${macros.carbs}g</div></div>
+    <div class="setting-row"><div class="setting-icon" style="background:#fef9c3">🧈</div><div class="setting-info"><div class="setting-name">脂肪目标</div></div><div class="setting-control" style="color:var(--yellow);font-weight:600">${macros.fat}g</div></div>
+  `;
+
+  const apiKeyInput = document.getElementById('api-key-input');
+  if (apiKeyInput && state.settings.apiKey) apiKeyInput.value = state.settings.apiKey;
+  const dsKeyInput = document.getElementById('deepseek-key-input');
+  if (dsKeyInput && state.settings.deepseekKey) dsKeyInput.value = state.settings.deepseekKey;
+  const providerSel = document.getElementById('ai-provider-select');
+  if (providerSel) providerSel.value = state.settings.aiProvider || 'gateway';
+  updateProviderUI();
+}
+
+// ==================== FOOD LOGGING ====================
+function openAddFood(mealId) {
+  currentMealType = mealId;
+  const meal = MEAL_TYPES.find(m => m.id === mealId);
+  document.getElementById('modal-meal-title').textContent = `添加到${meal.name}`;
+  document.getElementById('food-search').value = '';
+  document.getElementById('food-amount-section').classList.add('hidden');
+  // 重置自定义食物表单UI
+  document.getElementById('custom-food-form').classList.add('hidden');
+  document.getElementById('food-results').classList.remove('hidden');
+  document.getElementById('add-custom-food-btn').classList.remove('hidden');
+  selectedFoodItem = null;
+  searchFoods('');
+  document.getElementById('food-modal').classList.add('open');
+  setTimeout(() => document.getElementById('food-search').focus(), 300);
+}
+
+function closeModal() {
+  document.getElementById('food-modal').classList.remove('open');
+  // 重置自定义食物表单UI
+  document.getElementById('custom-food-form').classList.add('hidden');
+  document.getElementById('food-results').classList.remove('hidden');
+  document.getElementById('add-custom-food-btn').classList.remove('hidden');
+}
+
+function showCustomFoodForm() {
+  document.getElementById('food-results').classList.add('hidden');
+  document.getElementById('custom-food-form').classList.remove('hidden');
+  document.getElementById('add-custom-food-btn').classList.add('hidden');
+}
+
+function hideCustomFoodForm() {
+  document.getElementById('custom-food-form').classList.add('hidden');
+  document.getElementById('food-results').classList.remove('hidden');
+  document.getElementById('add-custom-food-btn').classList.remove('hidden');
+}
+
+function saveCustomFood() {
+  const name = document.getElementById('custom-food-name').value.trim();
+  const emoji = document.getElementById('custom-food-emoji').value.trim() || '🍚';
+  const category = document.getElementById('custom-food-category').value.trim() || '自定义';
+  const cal = parseFloat(document.getElementById('custom-food-cal').value) || 0;
+  const protein = parseFloat(document.getElementById('custom-food-protein').value) || 0;
+  const carbs = parseFloat(document.getElementById('custom-food-carbs').value) || 0;
+  const fat = parseFloat(document.getElementById('custom-food-fat').value) || 0;
+
+  if (!name) {
+    alert('请输入食物名称');
+    return;
+  }
+  if (cal <= 0) {
+    alert('请输入有效的卡路里值');
+    return;
+  }
+
+  // 生成唯一ID
+  const id = 'custom_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+
+  const customFood = {
+    id: id,
+    name: name,
+    emoji: emoji,
+    category: category,
+    cal: cal,
+    protein: protein,
+    carbs: carbs,
+    fat: fat,
+    custom: true
+  };
+
+  // 添加到自定义食物列表
+  state.customFoods.push(customFood);
+  saveData();
+
+  // 清空表单
+  document.getElementById('custom-food-name').value = '';
+  document.getElementById('custom-food-emoji').value = '🍚';
+  document.getElementById('custom-food-category').value = '';
+  document.getElementById('custom-food-cal').value = '';
+  document.getElementById('custom-food-protein').value = '';
+  document.getElementById('custom-food-carbs').value = '';
+  document.getElementById('custom-food-fat').value = '';
+
+  // 隐藏表单，显示搜索结果
+  hideCustomFoodForm();
+
+  // 重新搜索，让新食物显示在结果中
+  searchFoods();
+
+  // 提示用户
+  alert(`"${name}" 已添加到自定义食物库！`);
+}
+
+function searchFoods() {
+  const q = document.getElementById('food-search').value.toLowerCase();
+  const allFoods = FOOD_DB.concat(state.customFoods);
+  const results = q ? allFoods.filter(f => f.name.toLowerCase().includes(q) || (f.category && f.category.toLowerCase().includes(q))) : allFoods.slice(0, 20);
+  const container = document.getElementById('food-results');
+  if (!results.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:14px">没有找到相关食物</div>';
+    return;
+  }
+  container.innerHTML = results.map(f => `
+    <div class="food-result-item" onclick="selectFood('${f.id}')">
+      <div class="food-result-icon">${f.emoji}</div>
+      <div class="food-result-name">${f.name}${f.custom ? ' <span style="font-size:12px;color:var(--green)">(自定义)</span>' : ''}</div>
+      <div class="food-result-cal">${f.cal} kcal/100g</div>
+    </div>
+  `).join('');
+}
+
+function selectFood(foodId) {
+  selectedFoodItem = FOOD_DB.find(f => f.id === foodId);
+  if (!selectedFoodItem) {
+    selectedFoodItem = state.customFoods.find(f => f.id === foodId);
+  }
+  if (!selectedFoodItem) return;
+  document.getElementById('food-results').innerHTML = '';
+  document.getElementById('food-selected-name').textContent = `${selectedFoodItem.emoji} ${selectedFoodItem.name}${selectedFoodItem.custom ? ' (自定义)' : ''}`;
+  document.getElementById('food-amount').value = '100';
+  document.getElementById('food-amount-section').classList.remove('hidden');
+  updateFoodPreview();
+}
+
+function updateFoodPreview() {
+  if (!selectedFoodItem) return;
+  const amount = parseFloat(document.getElementById('food-amount').value) || 100;
+  const factor = amount / 100;
+  const cal = Math.round(selectedFoodItem.cal * factor);
+  const protein = (selectedFoodItem.protein * factor).toFixed(1);
+  const carbs = (selectedFoodItem.carbs * factor).toFixed(1);
+  const fat = (selectedFoodItem.fat * factor).toFixed(1);
+  document.getElementById('food-preview').innerHTML = `
+    <div class="fp-item"><div class="fp-val">${cal}</div><div class="fp-lbl">千卡</div></div>
+    <div class="fp-item"><div class="fp-val">${protein}g</div><div class="fp-lbl">蛋白质</div></div>
+    <div class="fp-item"><div class="fp-val">${carbs}g</div><div class="fp-lbl">碳水</div></div>
+    <div class="fp-item"><div class="fp-val">${fat}g</div><div class="fp-lbl">脂肪</div></div>
+  `;
+}
+
+function confirmAddFood() {
+  if (!selectedFoodItem || !currentMealType) return;
+  const amount = parseFloat(document.getElementById('food-amount').value) || 100;
+  const factor = amount / 100;
+  const entry = {
+    id: Date.now().toString(),
+    date: getTodayStr(),
+    meal: currentMealType,
+    foodId: selectedFoodItem.id,
+    foodName: selectedFoodItem.name,
+    amount: amount,
+    calories: selectedFoodItem.cal * factor,
+    protein: selectedFoodItem.protein * factor,
+    carbs: selectedFoodItem.carbs * factor,
+    fat: selectedFoodItem.fat * factor,
+  };
+  state.foodLog.push(entry);
+  saveData();
+  closeModal();
+  renderFoodLog();
+  if (state.currentTab === 'home') renderHome();
+}
+
+function deleteFoodLog(id) {
+  state.foodLog = state.foodLog.filter(f => f.id !== id);
+  saveData();
+  renderFoodLog();
+  if (state.currentTab === 'home') renderHome();
+}
+
+// ==================== WEIGHT LOGGING ====================
+function logWeight() {
+  const val = parseFloat(document.getElementById('weight-input').value);
+  if (!val || val < 20 || val > 300) { alert('请输入有效体重'); return; }
+  const today = getTodayStr();
+  state.weightLog = state.weightLog.filter(w => w.date !== today);
+  state.weightLog.push({date: today, weight: val});
+  if (state.profile) { state.profile.weight = val; }
+  saveData();
+  document.getElementById('weight-input').value = '';
+  renderWeight();
+  renderHome();
+}
+
+// ==================== SETTINGS ====================
+function saveApiKey() {
+  state.settings.apiKey = document.getElementById('api-key-input').value;
+  saveData();
+}
+
+function saveDeepseekKey() {
+  state.settings.deepseekKey = document.getElementById('deepseek-key-input').value;
+  saveData();
+}
+
+function saveAiProvider() {
+  state.settings.aiProvider = document.getElementById('ai-provider-select').value;
+  saveData();
+  updateProviderUI();
+}
+
+function renderAiBadge() {
+  const badge = document.getElementById('ai-provider-badge');
+  if (!badge) return;
+  const provider = state.settings.aiProvider || 'gateway';
+  if (provider === 'deepseek') {
+    badge.textContent = '🐋 DeepSeek';
+    badge.style.background = '#fdf4ff';
+    badge.style.borderColor = '#d8b4fe';
+    badge.style.color = '#7e22ce';
+  } else {
+    badge.textContent = '🤖 AI Gateway';
+    badge.style.background = 'var(--sky-pale)';
+    badge.style.borderColor = 'var(--sky)';
+    badge.style.color = '#0369a1';
+  }
+}
+
+function updateProviderUI() {
+  const provider = state.settings.aiProvider || 'gateway';
+  const gwRow = document.getElementById('row-gateway-key');
+  const dsRow = document.getElementById('row-deepseek-key');
+  if (gwRow) gwRow.classList.toggle('hidden', provider !== 'gateway');
+  if (dsRow) dsRow.classList.toggle('hidden', provider !== 'deepseek');
+}
+
+function clearAllData() {
+  if (confirm('确定要清除所有数据吗？此操作不可撤销。')) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+// ==================== AI CHAT ====================
+function scrollChatToBottom() {
+  const el = document.getElementById('chat-messages');
+  if (el) setTimeout(() => el.scrollTop = el.scrollHeight, 50);
+}
+
+function renderChatMessages() {
+  const el = document.getElementById('chat-messages');
+  if (!el) return;
+  if (!state.chatHistory.length) {
+    el.innerHTML = `<div class="msg ai">
+      <div class="msg-bubble">你好！我是你的AI营养助手 🌿<br>我可以帮你查询食物热量、分析营养配比，或者给出个性化的饮食建议。<br><br>试试下方的快捷问题，或者直接问我！</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = state.chatHistory.map(m => `
+    <div class="msg ${m.role}">
+      <div class="msg-bubble">${m.content.replace(/\n/g,'<br>')}</div>
+      ${m.time ? `<div class="msg-time">${m.time}</div>` : ''}
+    </div>
+  `).join('');
+  scrollChatToBottom();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  sendMessage(text);
+}
+
+function sendQuickPrompt(el) {
+  sendMessage(el.textContent);
+}
+
+async function sendMessage(text) {
+  const time = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
+  state.chatHistory.push({role:'user', content: text, time});
+  renderChatMessages();
+  saveData();
+
+  // Show typing indicator
+  const msgEl = document.getElementById('chat-messages');
+  const thinkEl = document.createElement('div');
+  thinkEl.className = 'ai-thinking';
+  thinkEl.innerHTML = '<span></span><span></span><span></span>';
+  msgEl.appendChild(thinkEl);
+  scrollChatToBottom();
+
+  const provider = state.settings.aiProvider || 'gateway';
+  const apiKey = provider === 'deepseek' ? state.settings.deepseekKey : state.settings.apiKey;
+
+  if (!apiKey) {
+    thinkEl.remove();
+    const providerName = provider === 'deepseek' ? 'DeepSeek API Key' : 'AI Gateway API Key';
+    const tip = `请先在「设置 → AI设置」中配置 ${providerName}，才能使用AI助手功能。`;
+    state.chatHistory.push({role:'ai', content: tip, time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'})});
+    renderChatMessages();
+    saveData();
+    return;
+  }
+
+  // Resolve endpoint & model
+  const endpoint = provider === 'deepseek'
+    ? 'https://api.deepseek.com/v1/chat/completions'
+    : 'https://ai-gateway.happycapy.ai/api/v1/chat/completions';
+  const model = provider === 'deepseek' ? 'deepseek-chat' : 'anthropic/claude-haiku-4.5';
+
+  // Build context
+  let systemCtx = '你是一个专业的营养师助手，擅长中文，提供准确的营养和饮食建议。回答要简洁专业，适当使用emoji。';
+  if (state.profile) {
+    const p = state.profile;
+    const goalCal = calcGoalCalories(p);
+    const todayTotals = getTodayTotals();
+    systemCtx += `\n用户资料：${p.name}，${p.age}岁，${p.gender==='male'?'男':'女'}，身高${p.height}cm，体重${p.weight}kg，目标：${p.goal==='lose'?'减脂':p.goal==='gain'?'增肌':'维持体重'}，每日热量目标${goalCal}kcal。`;
+    systemCtx += `\n今日已摄入：${Math.round(todayTotals.cal)}kcal，蛋白质${Math.round(todayTotals.protein)}g，碳水${Math.round(todayTotals.carbs)}g，脂肪${Math.round(todayTotals.fat)}g。`;
+  }
+
+  try {
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey},
+      body: JSON.stringify({
+        model,
+        messages: [
+          {role:'system', content: systemCtx},
+          ...state.chatHistory.slice(-8).map(m => ({role: m.role==='ai'?'assistant':'user', content: m.content}))
+        ],
+        max_tokens: 600,
+      })
+    });
+    const data = await resp.json();
+    thinkEl.remove();
+    const reply = data.choices?.[0]?.message?.content || '抱歉，无法获取回复，请稍后再试。';
+    const replyTime = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
+    state.chatHistory.push({role:'ai', content: reply, time: replyTime});
+  } catch(e) {
+    thinkEl.remove();
+    state.chatHistory.push({role:'ai', content:'网络错误，请检查连接后重试。', time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'})});
+  }
+  renderChatMessages();
+  saveData();
+}
+
+// Auto-resize chat textarea
+document.addEventListener('DOMContentLoaded', () => {
+  const ci = document.getElementById('chat-input');
+  if (ci) {
+    ci.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+    ci.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+    });
+  }
+});
+
+// ==================== PWA SETUP ====================
+function setupPWA() {
+  // 注册Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(function(registration) {
+          console.log('Service Worker 注册成功，作用域:', registration.scope);
+        })
+        .catch(function(error) {
+          console.log('Service Worker 注册失败:', error);
+        });
+    });
+  }
+}
+
+
+// ==================== BODY MEASUREMENTS ====================
+const MEASURE_FIELDS = [
+  {id:'chest', label:'胸围', emoji:'👙'},
+  {id:'waist', label:'腰围', emoji:'🤰'},
+  {id:'hip',   label:'臀围', emoji:'🍑'},
+  {id:'thigh', label:'大腿', emoji:'🦵'},
+  {id:'arm',   label:'手臂', emoji:'💪'},
+  {id:'calf',  label:'小腿', emoji:'🦶'},
+];
+
+function toggleMeasureForm() {
+  const card = document.getElementById('measure-form-card');
+  const isHidden = card.classList.contains('hidden');
+  card.classList.toggle('hidden', !isHidden);
+  if (!isHidden) return;
+  // Pre-fill with latest values
+  const latest = getLatestMeasurement();
+  if (latest) {
+    MEASURE_FIELDS.forEach(f => {
+      const el = document.getElementById('m-'+f.id);
+      if (el && latest[f.id]) el.value = latest[f.id];
+    });
+  }
+  setTimeout(() => card.scrollIntoView({behavior:'smooth', block:'start'}), 100);
+}
+
+function getLatestMeasurement() {
+  if (!state.measureLog || !state.measureLog.length) return null;
+  return [...state.measureLog].sort((a,b)=>b.date.localeCompare(a.date))[0];
+}
+
+function saveMeasurements() {
+  const today = getTodayStr();
+  const entry = {date: today};
+  let hasAny = false;
+  MEASURE_FIELDS.forEach(f => {
+    const val = parseFloat(document.getElementById('m-'+f.id).value);
+    if (!isNaN(val) && val > 0) { entry[f.id] = val; hasAny = true; }
+  });
+  if (!hasAny) { alert('请至少填写一项围度数据'); return; }
+  if (!state.measureLog) state.measureLog = [];
+  state.measureLog = state.measureLog.filter(m => m.date !== today);
+  state.measureLog.push(entry);
+  saveData();
+  toggleMeasureForm();
+  renderMeasurements();
+}
+
+function renderMeasurements() {
+  const latest = getLatestMeasurement();
+  const prev = state.measureLog && state.measureLog.length > 1
+    ? [...state.measureLog].sort((a,b)=>b.date.localeCompare(a.date))[1]
+    : null;
+
+  // Tiles
+  const tilesEl = document.getElementById('measure-tiles');
+  tilesEl.innerHTML = MEASURE_FIELDS.map(f => {
+    const val = latest ? latest[f.id] : null;
+    const prevVal = prev ? prev[f.id] : null;
+    const hasData = val != null;
+    let diffHTML = '';
+    if (hasData && prevVal != null) {
+      const d = (val - prevVal).toFixed(1);
+      const cls = d > 0 ? 'up' : d < 0 ? 'down' : '';
+      const sign = d > 0 ? '+' : '';
+      if (d !== '0.0') diffHTML = `<div class="mt-diff ${cls}">${sign}${d}</div>`;
+    }
+    return `<div class="measure-tile ${hasData?'has-data':''}">
+      <span class="mt-emoji">${f.emoji}</span>
+      <div class="mt-name">${f.label}</div>
+      ${hasData
+        ? `<div class="mt-val">${val}</div><div class="mt-unit">cm</div>${diffHTML}`
+        : `<div class="mt-val" style="font-size:14px;color:var(--text-secondary)">--</div>`}
+    </div>`;
+  }).join('');
+
+  // History
+  const histEl = document.getElementById('measure-log-list');
+  if (!state.measureLog || !state.measureLog.length) {
+    histEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-secondary);font-size:13px;font-weight:600">还没有围度记录</div>';
+    return;
+  }
+  const sorted = [...state.measureLog].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  histEl.innerHTML = sorted.map(m => {
+    const chips = MEASURE_FIELDS.filter(f=>m[f.id]!=null).map(f=>
+      `<span class="measure-log-chip">${f.emoji} ${f.label} ${m[f.id]}</span>`
+    ).join('');
+    return `<div class="measure-log-item" style="flex-direction:column;align-items:flex-start">
+      <div class="measure-log-date">${m.date}</div>
+      <div class="measure-log-chips">${chips}</div>
+    </div>`;
+  }).join('');
+}
+
+// Patch loadData to include measureLog
+const _origLoad = loadData;
+loadData = function() {
+  _origLoad();
+  try {
+    const ml = localStorage.getItem('nt_measure');
+    if (ml) state.measureLog = JSON.parse(ml);
+    else state.measureLog = [];
+  } catch(e) {}
+};
+const _origSave = saveData;
+saveData = function() {
+  _origSave();
+  try { localStorage.setItem('nt_measure', JSON.stringify(state.measureLog || [])); } catch(e) {}
+};
+
+// ==================== INIT ====================
+function initApp() {
+  loadData();
+  const hasProfile = !!state.profile;
+  document.getElementById('onboarding').classList.toggle('hidden', hasProfile);
+  if (!hasProfile) return;
+
+  renderHeader();
+  renderHome();
+  renderChatMessages();
+  renderAiBadge();
+  setupPWA();
+
+  // Modal close on overlay click
+  document.getElementById('food-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+}
+
+// Patch renderWeight to also call renderMeasurements
+const _origRW = renderWeight;
+renderWeight = function() {
+  _origRW();
+  renderMeasurements();
+};
+
+initApp();
+</script>
+</body>
+</html>
