@@ -266,7 +266,28 @@ body { display: flex; flex-direction: column; }
 .weight-log-diff.same { background: var(--gray-100); color: var(--text-secondary); }
 
 /* AI Chat */
-.chat-messages { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px; min-height: 100px; }
+.ai-chat-container {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 10px); /* 位于功能分页上方 */
+  left: 0;
+  right: 0;
+  height: calc(50vh - 80px);
+  background: var(--bg);
+  border-top: 1.5px solid var(--border);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 100px;
+  flex: 1;
+  overflow-y: auto;
+}
 .msg { max-width: 82%; display: flex; flex-direction: column; gap: 3px; }
 .msg.user { align-self: flex-end; align-items: flex-end; }
 .msg.ai { align-self: flex-start; align-items: flex-start; }
@@ -277,8 +298,7 @@ body { display: flex; flex-direction: column; }
 .msg.ai .msg-bubble { background: var(--card); color: var(--text); border: 1.5px solid var(--border); border-bottom-left-radius: 5px; box-shadow: 0 2px 8px var(--shadow); }
 .msg-time { font-size: 10px; font-weight: 700; color: var(--text-secondary); }
 .chat-input-wrap {
-  position: sticky; bottom: 0;
-  padding: 12px 14px calc(var(--nav-h) + var(--safe-bottom) + 10px);
+  padding: 12px 14px;
   background: var(--bg); border-top: 1.5px solid var(--border);
   display: flex; gap: 10px;
 }
@@ -334,6 +354,54 @@ body { display: flex; flex-direction: column; }
 }
 .setting-control select { max-width: 140px; }
 .setting-section-title { font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 14px 8px; padding-top: 4px; }
+
+/* 营养目标自定义样式 */
+.nutrition-goals-section {
+  margin: 0 14px 12px;
+}
+
+.nutrition-goals-group {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 2px 12px var(--shadow);
+  padding: 10px;
+}
+
+.nutrition-setting-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 8px;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.nutrition-setting-row:last-child {
+  border-bottom: none;
+}
+
+.nutrition-input {
+  width: 80px;
+  text-align: right;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.nutrition-input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.save-goals-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  font-weight: 700;
+}
 
 /* Modal / Overlay */
 .modal-overlay {
@@ -763,19 +831,23 @@ body { display: flex; flex-direction: column; }
     <div style="display:flex;align-items:center;gap:8px;padding:10px 14px 2px">
       <div id="ai-provider-badge" style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;background:var(--surface);border:1.5px solid var(--border);color:var(--text-secondary)"></div>
     </div>
-    <div class="quick-prompts" id="quick-prompts">
+    <div class="quick-prompts" id="quick-prompts" style="margin-bottom: calc(50vh - 80px);">
       <div class="quick-chip" onclick="sendQuickPrompt(this)">一碗米饭多少卡</div>
       <div class="quick-chip" onclick="sendQuickPrompt(this)">推荐减脂餐单</div>
       <div class="quick-chip" onclick="sendQuickPrompt(this)">我的热量目标合理吗</div>
       <div class="quick-chip" onclick="sendQuickPrompt(this)">高蛋白食物推荐</div>
       <div class="quick-chip" onclick="sendQuickPrompt(this)">今天吃了什么分析</div>
     </div>
-    <div class="chat-messages" id="chat-messages"></div>
-    <div class="chat-input-wrap">
-      <textarea class="chat-input" id="chat-input" placeholder="问问AI关于营养的建议..." rows="1"></textarea>
-      <button class="chat-send-btn" onclick="sendChat()">
-        <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
-      </button>
+
+    <!-- 底部固定的AI聊天容器 -->
+    <div class="ai-chat-container">
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" id="chat-input" placeholder="问问AI关于营养的建议..." rows="1"></textarea>
+        <button class="chat-send-btn" onclick="sendChat()">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1009,7 +1081,13 @@ let state = {
   weightLog: [],
   foodLog: [],
   customFoods: [],
-  settings: {apiKey: '', deepseekKey: '', aiProvider: 'gateway', units: 'metric'},
+  settings: {
+    apiKey: '',
+    deepseekKey: '',
+    aiProvider: 'gateway',
+    units: 'metric',
+    nutritionGoals: {dailyCalories: 2000, protein: 150, carbs: 200, fat: 65}
+  },
   chatHistory: [],
   currentTab: 'home',
   currentFoodDate: null, // null = today
@@ -1070,6 +1148,9 @@ function calcGoalCalories(profile) {
 }
 
 function calcMacros(goalCal, goal) {
+  // 如果没有提供goal参数，使用默认值
+  if (typeof goal === 'undefined') goal = 'maintain';
+
   let pct = {protein: 0.30, carbs: 0.40, fat: 0.30};
   if (goal === 'lose') pct = {protein: 0.35, carbs: 0.35, fat: 0.30};
   if (goal === 'gain') pct = {protein: 0.30, carbs: 0.45, fat: 0.25};
@@ -1188,8 +1269,15 @@ function renderHeader() {
 function renderHome() {
   if (!state.profile) return;
   const totals = getTodayTotals();
-  const goalCal = calcGoalCalories(state.profile);
-  const macros = calcMacros(goalCal, state.profile.goal);
+
+  // 使用自定义营养目标或计算值
+  const goals = state.settings.nutritionGoals || {
+    dailyCalories: calcGoalCalories(state.profile),
+    protein: 150, carbs: 200, fat: 65
+  };
+
+  const goalCal = goals.dailyCalories;
+  const macros = goals;
   const latest = getLatestWeight();
   const streak = calcStreak();
 
@@ -1400,6 +1488,19 @@ function renderSettings() {
   const goalNames = {lose:'减脂', maintain:'维持体重', gain:'增肌'};
   const actNames = {sedentary:'久坐', light:'轻度活动', moderate:'中度活动', active:'高度活动', very_active:'极度活跃'};
 
+  // 确保营养目标存在
+  if (!state.settings.nutritionGoals) {
+    state.settings.nutritionGoals = {
+      dailyCalories: 2000,
+      protein: 150,
+      carbs: 200,
+      fat: 65
+    };
+    saveData();
+  }
+
+  const goals = state.settings.nutritionGoals;
+
   document.getElementById('profile-settings').innerHTML = `
     <div class="setting-row"><div class="setting-icon" style="background:#f0fdf4">👤</div><div class="setting-info"><div class="setting-name">${p.name}</div><div class="setting-desc">${p.age}岁 · ${p.gender==='male'?'男':'女'} · ${p.height}cm</div></div></div>
     <div class="setting-row"><div class="setting-icon" style="background:#eff6ff">⚖️</div><div class="setting-info"><div class="setting-name">当前体重</div><div class="setting-desc">${getLatestWeight()?.weight || p.weight} kg</div></div></div>
@@ -1414,6 +1515,62 @@ function renderSettings() {
     <div class="setting-row"><div class="setting-icon" style="background:#fff7ed">🍚</div><div class="setting-info"><div class="setting-name">碳水目标</div></div><div class="setting-control" style="color:var(--orange);font-weight:600">${macros.carbs}g</div></div>
     <div class="setting-row"><div class="setting-icon" style="background:#fef9c3">🧈</div><div class="setting-info"><div class="setting-name">脂肪目标</div></div><div class="setting-control" style="color:var(--yellow);font-weight:600">${macros.fat}g</div></div>
   `;
+
+  // 添加营养目标自定义设置
+  document.getElementById('goal-settings').insertAdjacentHTML('afterend', `
+    <div class="nutrition-goals-section">
+      <div class="setting-section-title">自定义营养目标</div>
+      <div class="nutrition-goals-group">
+        <div class="nutrition-setting-row">
+          <div class="setting-icon" style="background:#fef9c3">🔥</div>
+          <div class="setting-info">
+            <div class="setting-name">每日热量目标</div>
+            <div class="setting-desc">当前值：${goals.dailyCalories} 千卡</div>
+          </div>
+          <input type="number" id="custom-calorie" class="nutrition-input"
+                 value="${goals.dailyCalories}" min="800" max="5000" step="50">
+          <span style="font-size:12px;white-space:nowrap">千卡</span>
+        </div>
+
+        <div class="nutrition-setting-row">
+          <div class="setting-icon" style="background:#eff6ff">🥩</div>
+          <div class="setting-info">
+            <div class="setting-name">蛋白质目标</div>
+            <div class="setting-desc">当前值：${goals.protein}g</div>
+          </div>
+          <input type="number" id="custom-protein" class="nutrition-input"
+                 value="${goals.protein}" min="20" max="300" step="5">
+          <span style="font-size:12px;white-space:nowrap">g</span>
+        </div>
+
+        <div class="nutrition-setting-row">
+          <div class="setting-icon" style="background:#fff7ed">🍚</div>
+          <div class="setting-info">
+            <div class="setting-name">碳水目标</div>
+            <div class="setting-desc">当前值：${goals.carbs}g</div>
+          </div>
+          <input type="number" id="custom-carbs" class="nutrition-input"
+                 value="${goals.carbs}" min="20" max="500" step="5">
+          <span style="font-size:12px;white-space:nowrap">g</span>
+        </div>
+
+        <div class="nutrition-setting-row">
+          <div class="setting-icon" style="background:#fef9c3">🧈</div>
+          <div class="setting-info">
+            <div class="setting-name">脂肪目标</div>
+            <div class="setting-desc">当前值：${goals.fat}g</div>
+          </div>
+          <input type="number" id="custom-fat" class="nutrition-input"
+                 value="${goals.fat}" min="10" max="200" step="1">
+          <span style="font-size:12px;white-space:nowrap">g</span>
+        </div>
+
+        <button class="btn-primary save-goals-btn" onclick="saveNutritionGoals()">
+          保存自定义营养目标
+        </button>
+      </div>
+    </div>
+  `);
 
   const apiKeyInput = document.getElementById('api-key-input');
   if (apiKeyInput && state.settings.apiKey) apiKeyInput.value = state.settings.apiKey;
@@ -1648,6 +1805,27 @@ function updateProviderUI() {
   const dsRow = document.getElementById('row-deepseek-key');
   if (gwRow) gwRow.classList.toggle('hidden', provider !== 'gateway');
   if (dsRow) dsRow.classList.toggle('hidden', provider !== 'deepseek');
+}
+
+function saveNutritionGoals() {
+  if (!state.settings.nutritionGoals) {
+    state.settings.nutritionGoals = {};
+  }
+
+  state.settings.nutritionGoals = {
+    dailyCalories: parseInt(document.getElementById('custom-calorie').value) || 2000,
+    protein: parseInt(document.getElementById('custom-protein').value) || 150,
+    carbs: parseInt(document.getElementById('custom-carbs').value) || 200,
+    fat: parseInt(document.getElementById('custom-fat').value) || 65
+  };
+
+  saveData();
+  alert('营养目标已保存！');
+
+  // 重新渲染设置页面以显示更新后的值
+  renderSettings();
+  // 也更新首页显示
+  if (state.currentTab === 'home') renderHome();
 }
 
 function clearAllData() {
@@ -1910,6 +2088,22 @@ function initApp() {
   const hasProfile = !!state.profile;
   document.getElementById('onboarding').classList.toggle('hidden', hasProfile);
   if (!hasProfile) return;
+
+  // 初始化营养目标数据
+  if (!state.settings.nutritionGoals) {
+    if (state.profile) {
+      const goalCal = calcGoalCalories(state.profile);
+      const calcMacros = calcMacros(goalCal, state.profile.goal) || {protein: 150, carbs: 200, fat: 65};
+
+      state.settings.nutritionGoals = {
+        dailyCalories: goalCal,
+        protein: calcMacros.protein,
+        carbs: calcMacros.carbs,
+        fat: calcMacros.fat
+      };
+      saveData();
+    }
+  }
 
   renderHeader();
   renderHome();
