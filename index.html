@@ -367,53 +367,6 @@ body { display: flex; flex-direction: column; }
 .setting-control select { max-width: 140px; }
 .setting-section-title { font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 14px 8px; padding-top: 4px; }
 
-/* 营养目标自定义样式 */
-.nutrition-goals-section {
-  margin: 0 14px 12px;
-}
-
-.nutrition-goals-group {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: 0 2px 12px var(--shadow);
-  padding: 10px;
-}
-
-.nutrition-setting-row {
-  display: flex;
-  align-items: center;
-  padding: 10px 8px;
-  gap: 10px;
-  border-bottom: 1px solid var(--border);
-}
-
-.nutrition-setting-row:last-child {
-  border-bottom: none;
-}
-
-.nutrition-input {
-  width: 80px;
-  text-align: right;
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.nutrition-input:focus {
-  outline: none;
-  border-color: var(--green);
-}
-
-.save-goals-btn {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  font-weight: 700;
-}
 
 /* Modal / Overlay */
 .modal-overlay {
@@ -1528,8 +1481,6 @@ function renderSettings() {
     <div class="setting-row"><div class="setting-icon" style="background:#fef9c3">🧈</div><div class="setting-info"><div class="setting-name">脂肪目标</div></div><div class="setting-control" style="color:var(--yellow);font-weight:600">${macros.fat}g</div></div>
   `;
 
-  
-
   const apiKeyInput = document.getElementById('api-key-input');
   if (apiKeyInput && state.settings.apiKey) apiKeyInput.value = state.settings.apiKey;
   const dsKeyInput = document.getElementById('deepseek-key-input');
@@ -1765,26 +1716,6 @@ function updateProviderUI() {
   if (dsRow) dsRow.classList.toggle('hidden', provider !== 'deepseek');
 }
 
-function saveNutritionGoals() {
-  if (!state.settings.nutritionGoals) {
-    state.settings.nutritionGoals = {};
-  }
-
-  state.settings.nutritionGoals = {
-    dailyCalories: parseInt(document.getElementById('custom-calorie').value) || 2000,
-    protein: parseInt(document.getElementById('custom-protein').value) || 150,
-    carbs: parseInt(document.getElementById('custom-carbs').value) || 200,
-    fat: parseInt(document.getElementById('custom-fat').value) || 65
-  };
-
-  saveData();
-  alert('营养目标已保存！');
-
-  // 重新渲染设置页面以显示更新后的值
-  renderSettings();
-  // 也更新首页显示
-  if (state.currentTab === 'home') renderHome();
-}
 
 function clearAllData() {
   if (confirm('确定要清除所有数据吗？此操作不可撤销。')) {
