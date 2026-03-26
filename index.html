@@ -1528,61 +1528,7 @@ function renderSettings() {
     <div class="setting-row"><div class="setting-icon" style="background:#fef9c3">🧈</div><div class="setting-info"><div class="setting-name">脂肪目标</div></div><div class="setting-control" style="color:var(--yellow);font-weight:600">${macros.fat}g</div></div>
   `;
 
-  // 添加营养目标自定义设置
-  document.getElementById('goal-settings').insertAdjacentHTML('afterend', `
-    <div class="nutrition-goals-section">
-      <div class="setting-section-title">自定义营养目标</div>
-      <div class="nutrition-goals-group">
-        <div class="nutrition-setting-row">
-          <div class="setting-icon" style="background:#fef9c3">🔥</div>
-          <div class="setting-info">
-            <div class="setting-name">每日热量目标</div>
-            <div class="setting-desc">当前值：${goals.dailyCalories} 千卡</div>
-          </div>
-          <input type="number" id="custom-calorie" class="nutrition-input"
-                 value="${goals.dailyCalories}" min="800" max="5000" step="50">
-          <span style="font-size:12px;white-space:nowrap">千卡</span>
-        </div>
-
-        <div class="nutrition-setting-row">
-          <div class="setting-icon" style="background:#eff6ff">🥩</div>
-          <div class="setting-info">
-            <div class="setting-name">蛋白质目标</div>
-            <div class="setting-desc">当前值：${goals.protein}g</div>
-          </div>
-          <input type="number" id="custom-protein" class="nutrition-input"
-                 value="${goals.protein}" min="20" max="300" step="5">
-          <span style="font-size:12px;white-space:nowrap">g</span>
-        </div>
-
-        <div class="nutrition-setting-row">
-          <div class="setting-icon" style="background:#fff7ed">🍚</div>
-          <div class="setting-info">
-            <div class="setting-name">碳水目标</div>
-            <div class="setting-desc">当前值：${goals.carbs}g</div>
-          </div>
-          <input type="number" id="custom-carbs" class="nutrition-input"
-                 value="${goals.carbs}" min="20" max="500" step="5">
-          <span style="font-size:12px;white-space:nowrap">g</span>
-        </div>
-
-        <div class="nutrition-setting-row">
-          <div class="setting-icon" style="background:#fef9c3">🧈</div>
-          <div class="setting-info">
-            <div class="setting-name">脂肪目标</div>
-            <div class="setting-desc">当前值：${goals.fat}g</div>
-          </div>
-          <input type="number" id="custom-fat" class="nutrition-input"
-                 value="${goals.fat}" min="10" max="200" step="1">
-          <span style="font-size:12px;white-space:nowrap">g</span>
-        </div>
-
-        <button class="btn-primary save-goals-btn" onclick="saveNutritionGoals()">
-          保存自定义营养目标
-        </button>
-      </div>
-    </div>
-  `);
+  
 
   const apiKeyInput = document.getElementById('api-key-input');
   if (apiKeyInput && state.settings.apiKey) apiKeyInput.value = state.settings.apiKey;
