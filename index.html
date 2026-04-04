@@ -25,7 +25,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/instascan@1.0.0/dist/instascan.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+<!-- 备用CDN: https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js -->
 <style>
 :root {
   --green: #4ade80;
@@ -1425,25 +1426,114 @@ function saveProfile() {
 }
 
 function skipOnboarding() {
-  alert('skipOnboarding 函数被调用！如果看到此提示，说明按钮点击有效。');
-  console.log('skipOnboarding 函数被调用');
-  // 设置默认用户资料
-  state.profile = {
-    name: '测试用户',
-    age: 30,
-    gender: 'male',
-    height: 170,
-    weight: 65,
-    activityLevel: 'moderate',
-    goal: 'maintain'
-  };
-  console.log('设置用户资料:', state.profile);
-  saveData();
-  console.log('保存数据完成');
-  document.getElementById('onboarding').classList.add('hidden');
-  console.log('隐藏引导页面');
-  initApp();
-  console.log('应用初始化完成');
+  try {
+    console.log('=== skipOnboarding 开始执行 ===');
+    alert('skipOnboarding 函数被调用！如果看到此提示，说明按钮点击有效。');
+
+    // 设置默认用户资料
+    state.profile = {
+      name: '测试用户',
+      age: 30,
+      gender: 'male',
+      height: 170,
+      weight: 65,
+      activityLevel: 'moderate',
+      goal: 'maintain'
+    };
+    console.log('设置用户资料:', state.profile);
+
+    // 确保state.weightLog是数组
+    if (!state.weightLog || !Array.isArray(state.weightLog)) {
+      state.weightLog = [];
+    }
+
+    // 确保state.foodLog是数组
+    if (!state.foodLog || !Array.isArray(state.foodLog)) {
+      state.foodLog = [];
+    }
+
+    // 确保state.customFoods是数组
+    if (!state.customFoods || !Array.isArray(state.customFoods)) {
+      state.customFoods = [];
+    }
+
+    // 确保state.settings是对象
+    if (!state.settings || typeof state.settings !== 'object') {
+      state.settings = {
+        apiKey: '',
+        deepseekKey: '',
+        aiProvider: 'gateway',
+        units: 'metric'
+      };
+    }
+
+    console.log('保存前state状态:', state);
+    saveData();
+    console.log('保存数据完成');
+
+    // 双重验证：检查localStorage是否保存成功
+    const savedProfile = localStorage.getItem('nt_profile');
+    console.log('localStorage中的用户资料:', savedProfile);
+
+    // 隐藏引导页面 - 使用多种方法确保隐藏
+    const onboardingEl = document.getElementById('onboarding');
+    if (onboardingEl) {
+      // 方法1: 添加hidden类
+      onboardingEl.classList.add('hidden');
+      console.log('引导页面已添加hidden类');
+
+      // 方法2: 直接设置display为none
+      onboardingEl.style.display = 'none';
+      console.log('引导页面直接设置display: none');
+
+      // 方法3: 设置visibility为hidden
+      onboardingEl.style.visibility = 'hidden';
+      console.log('引导页面设置visibility: hidden');
+
+      // 方法4: 设置opacity为0
+      onboardingEl.style.opacity = '0';
+      console.log('引导页面设置opacity: 0');
+
+      // 方法5: 设置z-index为-1
+      onboardingEl.style.zIndex = '-1';
+      console.log('引导页面设置z-index: -1');
+
+      // 强制重新渲染
+      setTimeout(() => {
+        console.log('强制检查引导页状态:');
+        console.log('- hidden类:', onboardingEl.classList.contains('hidden'));
+        console.log('- display:', onboardingEl.style.display);
+        console.log('- visibility:', onboardingEl.style.visibility);
+        console.log('- opacity:', onboardingEl.style.opacity);
+        console.log('- zIndex:', onboardingEl.style.zIndex);
+      }, 100);
+    } else {
+      console.error('找不到引导页面元素！');
+    }
+
+    // 重新初始化应用
+    console.log('开始重新初始化应用...');
+    setTimeout(() => {
+      initApp();
+      console.log('应用初始化完成');
+
+      // 检查是否成功跳转
+      setTimeout(() => {
+        const appEl = document.getElementById('app');
+        if (appEl && appEl.style.display !== 'none') {
+          console.log('应用已成功显示！');
+          alert('已成功跳过引导页，进入应用！');
+        } else {
+          console.error('应用未正确显示！');
+          alert('应用显示有问题，请刷新页面。');
+        }
+      }, 500);
+    }, 100);
+
+  } catch (error) {
+    console.error('skipOnboarding函数出错:', error);
+    alert('跳过引导页时出错: ' + error.message);
+  }
 }
 
 // ==================== UI RENDERING ====================
@@ -1712,7 +1802,6 @@ function renderSettings() {
   `;
 
   // 获取当前营养目标设置
-  const goals = state.settings.nutritionGoals;
   const isCustomMode = goals.customMode;
 
   document.getElementById('goal-settings').innerHTML = `
@@ -2235,11 +2324,15 @@ saveData = function() {
 };
 
 // ==================== INIT ====================
-// 自动跳过引导页（测试用）
+// 自动跳过引导页（可选功能，默认禁用）
 // 如果本地存储中没有用户资料，自动创建默认资料
 function autoSkipOnboarding() {
-  if (!localStorage.getItem('nt_profile')) {
-    console.log('自动创建默认用户资料');
+  // 添加一个URL参数来控制是否自动跳过
+  const urlParams = new URLSearchParams(window.location.search);
+  const autoSkip = urlParams.get('autoSkip');
+
+  if (autoSkip === 'true' && !localStorage.getItem('nt_profile')) {
+    console.log('自动创建默认用户资料（通过URL参数启用）');
     const defaultProfile = {
       name: '测试用户',
       age: 30,
@@ -2255,10 +2348,15 @@ function autoSkipOnboarding() {
     if (!localStorage.getItem('nt_food')) localStorage.setItem('nt_food', '[]');
     if (!localStorage.getItem('nt_settings')) localStorage.setItem('nt_settings', '{}');
     if (!localStorage.getItem('nt_custom_foods')) localStorage.setItem('nt_custom_foods', '[]');
+    console.log('自动跳过引导页已执行，刷新页面查看效果');
+  } else if (!localStorage.getItem('nt_profile')) {
+    console.log('本地存储中没有用户资料，显示引导页面');
+  } else {
+    console.log('已有用户资料，跳过引导页面');
   }
 }
 
-// 在initApp之前调用
+// 在initApp之前调用（但默认不自动跳过）
 autoSkipOnboarding();
 
 function initApp() {
@@ -2333,9 +2431,13 @@ function startQRScan() {
   initQRScanner();
 }
 
-function closeQrModal() {
+async function closeQrModal() {
   if (qrScanner) {
-    qrScanner.stop();
+    try {
+      await qrScanner.stop();
+    } catch (error) {
+      console.warn('停止二维码扫描器时出错:', error);
+    }
     qrScanner = null;
   }
 
@@ -2350,54 +2452,38 @@ function closeQrModal() {
 
 async function initQRScanner() {
   try {
-    // 检查Instascan库是否可用
-    if (typeof Instascan === 'undefined') {
+    // 检查Html5Qrcode库是否可用
+    if (typeof Html5Qrcode === 'undefined') {
       throw new Error('二维码扫描库加载失败，请检查网络连接');
     }
 
-    // 获取摄像头设备列表
-    const devices = await Instascan.Camera.getCameras();
-
-    if (devices.length === 0) {
-      throw new Error('未检测到可用的摄像头设备');
+    // 清空之前的扫描器
+    if (qrScanner) {
+      try {
+        await qrScanner.stop();
+      } catch (e) {
+        // 忽略停止错误
+      }
+      qrScanner = null;
     }
 
-    cameraDevices = devices;
+    // 初始化摄像头设备列表（使用facingMode）
+    cameraDevices = [
+      { id: 'environment', name: '后置摄像头', facingMode: 'environment' },
+      { id: 'user', name: '前置摄像头', facingMode: 'user' }
+    ];
     currentDeviceIndex = 0;
 
-    // 更新切换摄像头按钮状态
+    // 更新切换摄像头按钮状态（总是显示，因为至少有两个模式）
     const switchBtn = document.getElementById('switch-camera-btn');
-    if (cameraDevices.length > 1) {
-      switchBtn.classList.remove('hidden');
-      switchBtn.disabled = false;
-    } else {
-      switchBtn.classList.add('hidden');
-    }
+    switchBtn.classList.remove('hidden');
+    switchBtn.disabled = false;
 
     // 创建扫描器实例
-    qrScanner = new Instascan.Scanner({
-      video: document.getElementById('qr-video'),
-      mirror: false,
-      backgroundScan: true,
-      scanPeriod: 5
-    });
+    const videoElement = document.getElementById('qr-video');
+    qrScanner = new Html5Qrcode(videoElement.id);
 
-    // 监听扫描结果
-    qrScanner.addListener('scan', function(content) {
-      handleScannedBarcode(content);
-    });
-
-    // 监听摄像头活动状态
-    qrScanner.addListener('active', function() {
-      updateQrStatus('📷 摄像头已激活', 'success');
-    });
-
-    // 监听摄像头错误
-    qrScanner.addListener('inactive', function() {
-      updateQrStatus('📷 摄像头已停止', 'warning');
-    });
-
-    // 启动摄像头
+    // 启动摄像头并开始扫描
     await startCamera();
 
     updateQrStatus('✅ 准备扫描，将条码对准扫描框', 'success');
@@ -2411,8 +2497,43 @@ async function initQRScanner() {
 async function startCamera() {
   if (qrScanner && cameraDevices.length > 0) {
     try {
-      await qrScanner.start(cameraDevices[currentDeviceIndex]);
-      currentCameraId = cameraDevices[currentDeviceIndex].id;
+      // 先停止之前的扫描（如果有）
+      try {
+        await qrScanner.stop();
+      } catch (e) {
+        // 忽略停止错误
+      }
+
+      const cameraConfig = cameraDevices[currentDeviceIndex];
+      const facingMode = cameraConfig.facingMode;
+
+      // 获取视频元素尺寸，设置合适的扫描框大小
+      const videoElement = document.getElementById('qr-video');
+      const width = videoElement.clientWidth || 300;
+      const height = videoElement.clientHeight || 300;
+      const qrboxSize = Math.min(width, height) * 0.7;
+
+      // 启动摄像头并开始扫描
+      await qrScanner.start(
+        { facingMode: facingMode },
+        {
+          fps: 10,
+          qrbox: { width: qrboxSize, height: qrboxSize },
+          aspectRatio: 1.0
+        },
+        (decodedText) => {
+          // 扫描结果回调
+          handleScannedBarcode(decodedText);
+        },
+        (errorMessage) => {
+          // 可选：记录扫描错误
+          // console.debug('扫描错误:', errorMessage);
+        }
+      );
+
+      currentCameraId = cameraConfig.id;
+      updateQrStatus('📷 摄像头已激活', 'success');
+
     } catch (error) {
       console.error('启动摄像头失败:', error);
       updateQrStatus(`❌ 无法启动摄像头: ${error.message}`, 'error');
@@ -2420,18 +2541,22 @@ async function startCamera() {
   }
 }
 
-function switchCamera() {
+async function switchCamera() {
   if (cameraDevices.length > 1) {
     // 切换摄像头索引
     currentDeviceIndex = (currentDeviceIndex + 1) % cameraDevices.length;
 
     // 停止当前摄像头
     if (qrScanner) {
-      qrScanner.stop();
+      try {
+        await qrScanner.stop();
+      } catch (error) {
+        console.warn('停止摄像头时出错:', error);
+      }
     }
 
     // 启动新摄像头
-    startCamera();
+    await startCamera();
 
     const cameraName = cameraDevices[currentDeviceIndex].name ||
                       (currentDeviceIndex === 0 ? '后置摄像头' : '前置摄像头');
@@ -2442,7 +2567,11 @@ function switchCamera() {
 async function handleScannedBarcode(barcode) {
   // 停止扫描器
   if (qrScanner) {
-    qrScanner.stop();
+    try {
+      await qrScanner.stop();
+    } catch (error) {
+      console.warn('停止扫描器时出错:', error);
+    }
   }
 
   updateQrStatus(`✅ 已识别条码: ${barcode}`, 'success');
