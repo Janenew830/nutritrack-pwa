@@ -76,7 +76,7 @@
   }
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-* { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+/* * { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; } */
 /* 优化移动端触摸体验 */
 html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
 body { touch-action: manipulation; -webkit-touch-callout: none; }
@@ -696,6 +696,7 @@ button, .nav-item, .quick-chip, .meal-add-btn, .date-nav-btn {
       </div>
     </div>
     <button class="btn-primary" style="width:100%;padding:14px;font-size:16px;margin-top:8px;" onclick="saveProfile()">开始追踪 →</button>
+    <button id="skip-onboarding-btn" class="btn-secondary" style="width:100%;padding:10px;font-size:14px;margin-top:8px;" onclick="skipOnboarding()">跳过引导，直接进入应用</button>
   </div>
 </div>
 
@@ -1421,6 +1422,28 @@ function saveProfile() {
   saveData();
   document.getElementById('onboarding').classList.add('hidden');
   initApp();
+}
+
+function skipOnboarding() {
+  alert('skipOnboarding 函数被调用！如果看到此提示，说明按钮点击有效。');
+  console.log('skipOnboarding 函数被调用');
+  // 设置默认用户资料
+  state.profile = {
+    name: '测试用户',
+    age: 30,
+    gender: 'male',
+    height: 170,
+    weight: 65,
+    activityLevel: 'moderate',
+    goal: 'maintain'
+  };
+  console.log('设置用户资料:', state.profile);
+  saveData();
+  console.log('保存数据完成');
+  document.getElementById('onboarding').classList.add('hidden');
+  console.log('隐藏引导页面');
+  initApp();
+  console.log('应用初始化完成');
 }
 
 // ==================== UI RENDERING ====================
@@ -2212,6 +2235,32 @@ saveData = function() {
 };
 
 // ==================== INIT ====================
+// 自动跳过引导页（测试用）
+// 如果本地存储中没有用户资料，自动创建默认资料
+function autoSkipOnboarding() {
+  if (!localStorage.getItem('nt_profile')) {
+    console.log('自动创建默认用户资料');
+    const defaultProfile = {
+      name: '测试用户',
+      age: 30,
+      gender: 'male',
+      height: 170,
+      weight: 65,
+      activityLevel: 'moderate',
+      goal: 'maintain'
+    };
+    localStorage.setItem('nt_profile', JSON.stringify(defaultProfile));
+    // 也设置其他必要的初始数据
+    if (!localStorage.getItem('nt_weight')) localStorage.setItem('nt_weight', '[]');
+    if (!localStorage.getItem('nt_food')) localStorage.setItem('nt_food', '[]');
+    if (!localStorage.getItem('nt_settings')) localStorage.setItem('nt_settings', '{}');
+    if (!localStorage.getItem('nt_custom_foods')) localStorage.setItem('nt_custom_foods', '[]');
+  }
+}
+
+// 在initApp之前调用
+autoSkipOnboarding();
+
 function initApp() {
   loadData();
   const hasProfile = !!state.profile;
@@ -2818,6 +2867,17 @@ saveData = function() {
   originalSaveData();
   setTimeout(checkNutritionGoalsChange, 100);
 };
+
+// 添加备用事件监听器
+document.addEventListener('DOMContentLoaded', function() {
+  const skipBtn = document.getElementById('skip-onboarding-btn');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', function(e) {
+      console.log('备用事件监听器：跳过引导按钮被点击');
+      skipOnboarding();
+    });
+  }
+});
 
 initApp();
 </script>
