@@ -3014,11 +3014,131 @@ function sendQuickPrompt(el) {
   sendMessage(el.textContent);
 }
 
+// ==================== AI DIET ANALYSIS ====================
+const DIET_ANALYSIS_PATTERNS = [
+  /分析(?:一下)?(?:今天|今日)的?(?:饮食|食物|吃了什么)/, // 匹配"分析今天饮食"等
+  /我今天吃了什么/,  // 直接匹配"我今天吃了什么"
+  /饮食分析/,       // 匹配"饮食分析"
+  /分析饮食/,       // 匹配"分析饮食"
+  /今天饮食怎么样/, // 匹配"今天饮食怎么样"
+  /给我一些饮食建议/ // 匹配"给我一些饮食建议"
+];
+
+function detectDietAnalysisRequest(text) {
+  // 输入验证
+  if (typeof text !== 'string') {
+    return false;
+  }
+
+  const lowerText = text.toLowerCase();
+  return DIET_ANALYSIS_PATTERNS.some(pattern => pattern.test(lowerText));
+}
+
+function formatDietAnalysisData(foods) {
+  // 验证输入
+  if (!Array.isArray(foods) || foods.length === 0) {
+    return "今日尚无饮食记录，请先添加食物。";
+  }
+
+  // 使用项目常量定义餐次
+  const meals = {};
+  MEAL_TYPES.forEach(mealType => {
+    meals[mealType.id] = {
+      name: mealType.name,
+      foods: [],
+      total: {cal: 0, protein: 0, carbs: 0, fat: 0}
+    };
+  });
+
+  // 辅助函数：安全数值转换
+  const safeNumber = (value) => Number(value) || 0;
+  const roundNumber = (value) => Math.round(safeNumber(value));
+
+  // 分组食物并计算小计（确保数值安全）
+  foods.forEach(food => {
+    const meal = meals[food.meal];
+    if (meal) {
+      meal.foods.push(food);
+      meal.total.cal += safeNumber(food.calories);
+      meal.total.protein += safeNumber(food.protein);
+      meal.total.carbs += safeNumber(food.carbs);
+      meal.total.fat += safeNumber(food.fat);
+    }
+  });
+
+  // 格式化输出（使用数组提高拼接效率）
+  const outputLines = [];
+  const grandTotal = {cal: 0, protein: 0, carbs: 0, fat: 0};
+
+  Object.values(meals).forEach(meal => {
+    if (meal.foods.length > 0) {
+      outputLines.push(`${meal.name}：`);
+      meal.foods.forEach(food => {
+        outputLines.push(`- ${food.name} ×1 (${safeNumber(food.amount)}g) - ${roundNumber(food.calories)}kcal, 蛋白质${roundNumber(food.protein)}g, 碳水${roundNumber(food.carbs)}g, 脂肪${roundNumber(food.fat)}g`);
+      });
+      outputLines.push(`${meal.name}小计：${roundNumber(meal.total.cal)}kcal, 蛋白质${roundNumber(meal.total.protein)}g, 碳水${roundNumber(meal.total.carbs)}g, 脂肪${roundNumber(meal.total.fat)}g\n`);
+
+      grandTotal.cal += meal.total.cal;
+      grandTotal.protein += meal.total.protein;
+      grandTotal.carbs += meal.total.carbs;
+      grandTotal.fat += meal.total.fat;
+    }
+  });
+
+  if (outputLines.length === 0) {
+    return "今日尚无饮食记录，请先添加食物。";
+  }
+
+  outputLines.push(`今日总摄入：${roundNumber(grandTotal.cal)}kcal, 蛋白质${roundNumber(grandTotal.protein)}g, 碳水${roundNumber(grandTotal.carbs)}g, 脂肪${roundNumber(grandTotal.fat)}g`);
+
+  return outputLines.join('\n');
+}
+
+function buildEnhancedSystemPrompt(isDietAnalysis, todayFoods) {
+  // 参数验证和默认值
+  if (typeof isDietAnalysis !== 'boolean') {
+    isDietAnalysis = Boolean(isDietAnalysis);
+  }
+  if (!Array.isArray(todayFoods)) {
+    todayFoods = [];
+  }
+
+  // 基础系统提示
+  let systemCtx = '你是一个专业的营养师助手，擅长中文，提供准确的营养和饮食建议。回答要简洁专业，适当使用emoji。';
+
+  // 添加用户资料（如果存在）
+  if (state && state.profile) {
+    const p = state.profile;
+    const goalCal = calcGoalCalories(p);
+    const todayTotals = getTodayTotals();
+    systemCtx += `\n用户资料：${p.name}，${p.age}岁，${p.gender==='male'?'男':'女'}，身高${p.height}cm，体重${p.weight}kg，目标：${p.goal==='lose'?'减脂':p.goal==='gain'?'增肌':'维持体重'}，每日热量目标${goalCal}kcal。`;
+    systemCtx += `\n今日已摄入：${Math.round(todayTotals.cal)}kcal，蛋白质${Math.round(todayTotals.protein)}g，碳水${Math.round(todayTotals.carbs)}g，脂肪${Math.round(todayTotals.fat)}g。`;
+  }
+
+  // 如果是饮食分析模式，添加详细饮食数据
+  if (isDietAnalysis) {
+    let dietData = '';
+    try {
+      dietData = formatDietAnalysisData(todayFoods);
+    } catch (error) {
+      console.error('formatDietAnalysisData error:', error);
+      dietData = '饮食数据格式化失败，请检查数据格式。';
+    }
+    systemCtx += `\n\n今日具体饮食记录：\n${dietData}\n\n请基于以上具体食物清单，分析用户的饮食结构，给出专业建议。`;
+  }
+
+  return systemCtx;
+}
+
 async function sendMessage(text) {
   const time = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
   state.chatHistory.push({role:'user', content: text, time});
   renderChatMessages();
   saveData();
+
+  // 检测是否为饮食分析请求
+  const isDietAnalysis = detectDietAnalysisRequest(text);
+  const todayFoods = isDietAnalysis ? getTodayFoods() : [];
 
   // 尝试从消息中提取食物信息并添加到食物库
   let addedFoodInfo = null;
@@ -3064,15 +3184,8 @@ async function sendMessage(text) {
     : 'https://ai-gateway.happycapy.ai/api/v1/chat/completions';
   const model = provider === 'deepseek' ? 'deepseek-chat' : 'anthropic/claude-haiku-4.5';
 
-  // Build context
-  let systemCtx = '你是一个专业的营养师助手，擅长中文，提供准确的营养和饮食建议。回答要简洁专业，适当使用emoji。';
-  if (state.profile) {
-    const p = state.profile;
-    const goalCal = calcGoalCalories(p);
-    const todayTotals = getTodayTotals();
-    systemCtx += `\n用户资料：${p.name}，${p.age}岁，${p.gender==='male'?'男':'女'}，身高${p.height}cm，体重${p.weight}kg，目标：${p.goal==='lose'?'减脂':p.goal==='gain'?'增肌':'维持体重'}，每日热量目标${goalCal}kcal。`;
-    systemCtx += `\n今日已摄入：${Math.round(todayTotals.cal)}kcal，蛋白质${Math.round(todayTotals.protein)}g，碳水${Math.round(todayTotals.carbs)}g，脂肪${Math.round(todayTotals.fat)}g。`;
-  }
+  // Build context using enhanced system prompt
+  const systemCtx = buildEnhancedSystemPrompt(isDietAnalysis, todayFoods);
 
   try {
     const resp = await fetch(endpoint, {
