@@ -341,9 +341,9 @@ h1, h2, h3, .section-title, .module-title { text-align: center; }
 }
 .ring-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
 .ring-container canvas { position: absolute; top: 0; left: 0; width: 100px; height: 100px; }
-.ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.ring-center .cal-num { font-size: 24px; font-weight: 700; color: white; line-height: 1; }
-.ring-center .cal-label { font-size: 10px; color: rgba(255,255,255,0.75); font-weight: 500; }
+.ring-center { position: absolute; inset: 0; display: grid; place-items: center; grid-template-rows: auto auto; align-content: center; gap: 2px; }
+.ring-center .cal-num { font-size: 24px; font-weight: 700; color: white; line-height: 1; text-align: center; align-self: end; }
+.ring-center .cal-label { font-size: 10px; color: rgba(255,255,255,0.75); font-weight: 500; text-align: center; line-height: 1; align-self: start; }
 .hero-stats { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 .hero-stat-row { display: flex; gap: 16px; }
 .hero-stat { flex: 1; }
@@ -354,14 +354,14 @@ h1, h2, h3, .section-title, .module-title { text-align: center; }
 
 /* Macro bars */
 .macro-bars { display: flex; flex-direction: column; gap: 14px; }
-.macro-row { display: flex; align-items: center; gap: 12px; }
-.macro-name { font-size: 13px; font-weight: 800; width: 38px; color: var(--text-secondary); }
+.macro-row { display: flex; align-items: center; gap: 10px; }
+.macro-name { font-size: 13px; font-weight: 800; width: 48px; color: var(--text-secondary); white-space: nowrap; }
 .macro-bar-wrap { flex: 1; height: 10px; background: var(--gray-200); border-radius: 5px; overflow: hidden; }
 .macro-bar { height: 100%; border-radius: 5px; transition: width 0.7s cubic-bezier(0.34,1.56,0.64,1); }
 .macro-bar.protein { background: linear-gradient(90deg, #60a5fa, #93c5fd); }
 .macro-bar.carbs { background: linear-gradient(90deg, #fb923c, #fbbf24); }
 .macro-bar.fat { background: linear-gradient(90deg, #fbbf24, #fde68a); }
-.macro-nums { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-align: right; width: 75px; }
+.macro-nums { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-align: right; width: 70px; }
 
 /* Meal sections */
 .meal-section { margin: 0 14px 12px; }
