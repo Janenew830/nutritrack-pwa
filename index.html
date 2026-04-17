@@ -96,9 +96,9 @@
   --radius-sm: 12px;                /* 原 14px */
 
   /* 间距系统 */
-  --space-xxl: 32px;    /* 页面大区块之间 */
-  --space-xl: 24px;     /* 卡片之间 */
-  --space-lg: 16px;     /* 卡片内部区块之间 */
+  --space-xxl: 28px;    /* 页面大区块之间 */
+  --space-xl: 20px;     /* 卡片之间 */
+  --space-lg: 14px;     /* 卡片内部区块之间 */
   --space-sm: 8px;      /* 内边距、小元素间距 */
   --space-xs: 4px;      /* 标签内部元素间距 */
 
@@ -129,7 +129,7 @@
   --body-size: var(--body-size-desktop);
 
   /* 不变变量 */
-  --nav-h: 74px;
+  --nav-h: 68px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -220,35 +220,35 @@ body { display: flex; flex-direction: column; background: var(--bg); }
 
 /* Scrollable content area */
 #app { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-.tab-content { display: none; flex: 1; overflow-y: auto; padding-top: calc(60px + var(--safe-top)); padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px); }
+.tab-content { display: none; flex: 1; overflow-y: auto; padding-top: calc(48px + var(--safe-top)); padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 16px); }
 .tab-content.active { display: block; }
 .tab-content::-webkit-scrollbar { display: none; }
 
 /* Top Header */
 .top-header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: calc(60px + var(--safe-top));
+  height: calc(48px + var(--safe-top));
   padding-top: var(--safe-top);
   background: var(--bg);
   border-bottom: 1.5px solid var(--border);
-  display: flex; align-items: center; padding-left: 18px; padding-right: 18px;
-  gap: 10px;
+  display: flex; align-items: center; padding-left: 16px; padding-right: 16px;
+  gap: 12px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 .top-header .logo-mark {
-  width: 34px; height: 34px;
+  width: 32px; height: 32px;
   background: linear-gradient(135deg, var(--green-dark), var(--green));
-  border-radius: 12px;
-  box-shadow: 0 3px 10px var(--shadow);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px var(--shadow);
   display: flex; align-items: center; justify-content: center;
 }
-.top-header .logo-mark svg { width: 18px; height: 18px; fill: white; }
-.top-header h1 { font-size: 19px; font-weight: 900; color: var(--text); letter-spacing: -0.3px; text-align: center; }
+.top-header .logo-mark svg { width: 16px; height: 16px; fill: white; }
+.top-header h1 { font-size: 17px; font-weight: 900; color: var(--text); letter-spacing: -0.2px; text-align: center; }
 .top-header .date-badge {
-  margin-left: auto; font-size: 11px; font-weight: 700; color: var(--text-secondary);
-  background: var(--surface); border-radius: 20px; padding: 5px 11px;
-  border: 1.5px solid var(--border);
+  margin-left: auto; font-size: 10px; font-weight: 700; color: var(--text-secondary);
+  background: var(--surface); border-radius: 16px; padding: 4px 9px;
+  border: 1px solid var(--border);
 }
 
 /* Bottom Nav */
@@ -258,7 +258,7 @@ body { display: flex; flex-direction: column; background: var(--bg); }
   padding-bottom: var(--safe-bottom);
   background: var(--bg);
   border-top: 1.5px solid var(--border);
-  display: flex; align-items: flex-start; padding-top: 8px;
+  display: flex; align-items: flex-start; padding-top: 6px;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -299,28 +299,28 @@ body { display: flex; flex-direction: column; background: var(--bg); }
   background: var(--card);
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
-  padding: 24px;
-  margin: 0 14px 16px;
-  box-shadow: 0 4px 24px var(--glow-yellow), 0 0 0 1px var(--border);
+  padding: 20px;
+  margin: 0 16px 14px;
+  box-shadow: 0 4px 20px var(--glow-yellow), 0 0 0 1px var(--border);
   transition: box-shadow 0.3s ease;
 }
 .card-title { font-size: 12px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; text-align: center; }
 .card-content, .ring-center, .meal-header, .stat-card { text-align: center; }
 
 /* Page padding */
-.page-content { padding: 12px 0; text-align: center; }
+.page-content { padding: 8px 0; text-align: center; }
 
 /* Headers center alignment */
 h1, h2, h3, .section-title, .module-title { text-align: center; }
 
 /* Summary Ring */
 .summary-hero {
-  margin: 0 14px 16px;
+  margin: 0 16px 14px;
   background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 60%, var(--natural-leaf) 100%);
-  border-radius: 28px; padding: 30px 24px 30px 22px;
-  color: white; display: flex; align-items: center; gap: 20px;
+  border-radius: 24px; padding: 20px 16px;
+  color: white;
   position: relative; overflow: hidden;
-  box-shadow: 0 8px 24px var(--glow-amber);
+  box-shadow: 0 6px 20px var(--glow-amber);
 }
 .summary-hero::before {
   content: ''; position: absolute; top: -20px; right: -20px;
@@ -334,34 +334,88 @@ h1, h2, h3, .section-title, .module-title { text-align: center; }
 }
 /* third bubble */
 .summary-hero .bubble3 {
-  position: absolute; bottom: 8px; left: 120px;
-  width: 40px; height: 40px; border-radius: 50%;
+  position: absolute; bottom: 6px; left: 100px;
+  width: 32px; height: 32px; border-radius: 50%;
   background: rgba(255,255,255,0.08);
   pointer-events: none;
 }
-.ring-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
-.ring-container canvas { position: absolute; top: 0; left: 0; width: 100px; height: 100px; }
-.ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-.ring-center .cal-num { font-size: 24px; font-weight: 700; color: white; line-height: 1; text-align: center; margin: 0; }
-.ring-center .cal-label { font-size: 10px; color: rgba(255,255,255,0.75); font-weight: 500; text-align: center; line-height: 1; margin: 0; }
-.hero-stats { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-.hero-stat-row { display: flex; gap: 16px; }
-.hero-stat { flex: 1; }
-.hero-stat .val { font-size: 18px; font-weight: 700; color: white; }
-.hero-stat .lbl { font-size: 12px; color: rgba(255,255,255,0.7); }
-.hero-goal { font-size: 13px; color: rgba(255,255,255,0.8); }
-.hero-goal strong { color: white; }
+/* 热量进度条样式 */
+.hero-progress {
+  margin-bottom: 16px;
+}
+
+.progress-bar-container {
+  height: 12px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  background: rgba(255,255,255,0.9);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-percent {
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+}
+
+.progress-stats {
+  font-size: 12px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 600;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.metric-item {
+  text-align: center;
+  padding: 12px 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.metric-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.7);
+}
+/* 旧的hero样式已删除，使用新的进度条布局 */
 
 /* Macro bars */
-.macro-bars { display: flex; flex-direction: column; gap: 14px; }
-.macro-row { display: flex; align-items: center; gap: 10px; }
-.macro-name { font-size: 13px; font-weight: 800; width: 48px; color: var(--text-secondary); white-space: nowrap; }
-.macro-bar-wrap { flex: 1; height: 10px; background: var(--gray-200); border-radius: 5px; overflow: hidden; }
+.macro-bars { display: flex; flex-direction: column; gap: 12px; }
+.macro-row { display: flex; align-items: center; gap: 8px; }
+.macro-name { font-size: 12px; font-weight: 800; width: 42px; color: var(--text-secondary); white-space: nowrap; }
+.macro-bar-wrap { flex: 1; height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; }
 .macro-bar { height: 100%; border-radius: 5px; transition: width 0.7s cubic-bezier(0.34,1.56,0.64,1); }
 .macro-bar.protein { background: linear-gradient(90deg, #60a5fa, #93c5fd); }
 .macro-bar.carbs { background: linear-gradient(90deg, #fb923c, #fbbf24); }
 .macro-bar.fat { background: linear-gradient(90deg, #fbbf24, #fde68a); }
-.macro-nums { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-align: right; width: 70px; }
+.macro-nums { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-align: right; width: 60px; }
 
 /* Meal sections */
 .meal-section { margin: 0 14px 12px; }
@@ -638,13 +692,13 @@ h1, h2, h3, .section-title, .module-title { text-align: center; }
 .activity-opt.selected .check::after { content: '✓'; font-size: 11px; color: white; font-weight: 900; }
 
 /* Stats row */
-.stats-row { display: flex; gap: 12px; margin: 0 14px 16px; }
+.stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 16px 14px; }
 .stat-card {
   flex: 1; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
   padding: 18px 12px; text-align: center;
   box-shadow: 0 2px 12px var(--shadow);
 }
-.stat-card .stat-val { font-size: 24px; font-weight: 900; color: var(--text); }
+.stat-card .stat-val { font-size: 22px; font-weight: 900; color: var(--text); }
 .stat-card .stat-unit { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
 .stat-card .stat-lbl { font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-top: 4px; letter-spacing: 0.03em; }
 .bmi-badge { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 800; margin-top: 4px; }
@@ -809,6 +863,23 @@ button, .nav-item, .quick-chip, .meal-add-btn, .date-nav-btn {
   .text-small, .date-badge { font-size: var(--small-size); }
   .badge, .tag { font-size: var(--badge-size); }
   .nav-item span { font-size: var(--nav-label-size); }
+
+  /* 小屏幕统计卡片布局优化 */
+  .stats-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 16px 10px;
+  }
+}
+
+/* 中等屏幕尺寸时显示三个统计卡片 */
+@media (min-width: 480px) {
+  .stats-row {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
 }
 
 /* 自然分隔线 */
@@ -929,24 +1000,28 @@ button, .nav-item, .quick-chip, .meal-add-btn, .date-nav-btn {
       <!-- Hero Summary -->
       <div class="summary-hero" id="hero-card">
         <div class="bubble3"></div>
-        <div class="ring-container">
-          <canvas id="calRingCanvas" width="100" height="100"></canvas>
-          <div class="ring-center">
-            <div class="cal-num" id="hero-eaten">0</div>
-            <div class="cal-label">已摄入</div>
+        <!-- 水平进度条布局 -->
+        <div class="hero-progress">
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="calorie-progress" style="width: 0%"></div>
+          </div>
+          <div class="progress-info">
+            <div class="progress-percent" id="progress-percent">0%</div>
+            <div class="progress-stats">
+              <span id="calorie-eaten">0</span> / <span id="calorie-goal">--</span> kcal
+            </div>
           </div>
         </div>
-        <div class="hero-stats">
-          <div class="hero-goal">目标 <strong id="hero-goal-cal">--</strong> kcal</div>
-          <div class="hero-stat-row">
-            <div class="hero-stat">
-              <div class="val" id="hero-remaining">--</div>
-              <div class="lbl">剩余 kcal</div>
-            </div>
-            <div class="hero-stat">
-              <div class="val" id="hero-burned">0</div>
-              <div class="lbl">消耗 kcal</div>
-            </div>
+
+        <!-- 数据指标网格 -->
+        <div class="hero-metrics">
+          <div class="metric-item">
+            <div class="metric-value" id="metric-remaining">--</div>
+            <div class="metric-label">剩余热量</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value" id="metric-burned">0</div>
+            <div class="metric-label">运动消耗</div>
           </div>
         </div>
       </div>
