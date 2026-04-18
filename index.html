@@ -1919,11 +1919,11 @@ function renderHome() {
   const streak = calcStreak();
 
   // Hero
-  document.getElementById('hero-eaten').textContent = Math.round(totals.cal);
-  document.getElementById('hero-goal-cal').textContent = goalCal;
+  document.getElementById('calorie-eaten').textContent = Math.round(totals.cal);
+  document.getElementById('calorie-goal').textContent = goalCal;
   const remaining = goalCal - Math.round(totals.cal);
-  document.getElementById('hero-remaining').textContent = Math.max(0, remaining);
-  document.getElementById('hero-burned').textContent = '0';
+  document.getElementById('metric-remaining').textContent = Math.max(0, remaining);
+  document.getElementById('metric-burned').textContent = '0';
 
   // Ring
   drawCalRing(totals.cal, goalCal);
