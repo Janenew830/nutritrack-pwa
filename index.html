@@ -1925,6 +1925,11 @@ function renderHome() {
   document.getElementById('metric-remaining').textContent = Math.max(0, remaining);
   document.getElementById('metric-burned').textContent = '0';
 
+  // 更新进度条和百分比
+  const progressPct = goalCal > 0 ? Math.min(100, Math.round(totals.cal / goalCal * 100)) : 0;
+  document.getElementById('calorie-progress').style.width = progressPct + '%';
+  document.getElementById('progress-percent').textContent = progressPct + '%';
+
   // Ring
   drawCalRing(totals.cal, goalCal);
 
@@ -3798,6 +3803,13 @@ document.addEventListener('DOMContentLoaded', function() {
       skipOnboarding();
     });
   }
+
+  // UI同步定时器 - 每5秒同步一次首页显示
+  setInterval(function() {
+    if (state.currentTab === 'home') {
+      renderHome();
+    }
+  }, 5000);
 });
 
 initApp();
